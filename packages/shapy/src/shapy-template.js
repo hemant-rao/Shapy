@@ -1578,6 +1578,7 @@ export const SHAPY_HTML = `<!doctype html>
       const inner = document.createElement('span');
       inner.className = 'shape__inner';
       inner.dataset.id = id;
+      const safeImage = def.image ? sanitizeImageUrl(def.image) : null;
       if (def.emoji) {
         inner.textContent = def.emoji;
         inner.style.fontSize = \`\${size * 0.8}px\`;
@@ -1586,9 +1587,7 @@ export const SHAPY_HTML = `<!doctype html>
         inner.style.placeItems = 'center';
         inner.style.background = 'transparent';
         inner.style.color = 'currentColor';
-      } else if (def.image) {
-        const safeImage = sanitizeImageUrl(def.image);
-        if (!safeImage) break; // skip unsafe image entirely
+      } else if (safeImage) {
         inner.style.display = 'grid';
         inner.style.placeItems = 'center';
         inner.style.background = 'transparent';
