@@ -97,6 +97,9 @@ export interface ShapyInstance {
 
 export function createShapy(): ShapyInstance;
 
+/** Returns a new 32-character hex seed. */
+export function createSeed(): string;
+
 export interface ShapyBackgroundElement extends HTMLElement {}
 
 declare global {

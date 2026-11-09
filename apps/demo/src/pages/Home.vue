@@ -45,15 +45,13 @@
 
 <script setup>
 import { ref } from 'vue';
-import 'shapy';
+import { createSeed } from 'shapy';
 
 const seed = ref('4D5E465BCA');
 const toast = ref('');
 
 function newSeed() {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  seed.value = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  seed.value = createSeed();
 }
 
 async function copySeed() {

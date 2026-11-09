@@ -2,15 +2,31 @@
 
 Seedable generative shape backgrounds as a zero-dependency Web Component.
 
+> **New to Shapy?** Read the
+> [step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md).
+> It covers installation, your first background, common recipes, and
+> troubleshooting.
+
+## Install
+
 ```bash
 npm install shapy
 ```
 
-```html
-<script type="module">
-  import 'shapy';
-</script>
+> **Pre-release note:** `shapy` is not on npm yet. Until the first public
+> release, use the repository example.
 
+## Quick start
+
+### 1. Import the package once
+
+```js
+import 'shapy';
+```
+
+### 2. Add the element
+
+```html
 <shapy-background
   seed="4D5E465BCA"
   palette="midnight"
@@ -18,6 +34,19 @@ npm install shapy
   scale="110"
   style="position: fixed; inset: 0; display: block;"
 ></shapy-background>
+```
+
+### 3. Give it a size
+
+The element fills its parent. The inline style above makes it fill the viewport.
+You can also use CSS:
+
+```css
+shapy-background {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
 ```
 
 ## Features
@@ -148,12 +177,46 @@ const element = createShapy().mount(document.querySelector('#background'), {
 
 `mount()` accepts camelCase or kebab-case keys, takes an element as the
 container, and returns the created element. Use `document.querySelector()` if
-you only have a selector string.
+you only have a selector string. It replaces the container's existing content.
 
-## Full documentation
+To create a new pattern:
 
-The project repository README contains the complete guide, development setup,
-and publishing notes.
+```js
+import { createSeed } from 'shapy';
+
+element.setAttribute('seed', createSeed());
+```
+
+## Troubleshooting
+
+### Nothing appears
+
+1. Did you import `shapy`?
+2. Does `shapy-background` have a size? Try
+   `shapy-background { position: fixed; inset: 0; display: block; }`.
+3. Check the browser console for errors.
+
+### Vue says "Failed to resolve component: shapy-background"
+
+Add the `isCustomElement` option shown in the
+[step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md#use-with-vue-3).
+
+### The pattern changes every time I reload
+
+Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
+
+### Stickers do not appear
+
+Import from `shapy/stickers`, set `registry-data` to
+`JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"`.
+
+## Documentation
+
+- [Step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md)
+- [Attributes](#attributes)
+- [JavaScript API](#javascript-api)
+- [Optional stickers](#optional-stickers)
+- [Full repository documentation](https://github.com/hemant-rao/Shapy#readme)
 
 ## License
 

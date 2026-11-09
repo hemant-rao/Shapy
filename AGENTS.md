@@ -18,6 +18,9 @@ Read it before touching code.
      known limitations change.
    - Add an entry to `CHANGELOG.md` for every user-visible change.
    - Update `README.md` and the package README when the public API changes.
+   - Update `docs/GETTING_STARTED.md` when installation, setup, or usage changes.
+   - Keep `docs/UNIQUENESS.md` in sync with shape, emoji, sticker, or setting
+     counts.
 2. **Only make necessary changes.** No drive-by refactors, no speculative
    features, no "while I'm here" rewrites.
 3. **Never delete without a real need.** If deletion is required, confirm the
@@ -59,6 +62,8 @@ Read it before touching code.
 | Optional stickers | `packages/shapy/src/stickers.js` (exposed as `shapy/stickers`) |
 | Demo config UI | `apps/demo/src/pages/Config.vue` |
 | Demo background page | `apps/demo/src/pages/Home.vue` |
+| Beginner guide | `docs/GETTING_STARTED.md` |
+| Composition math | `docs/UNIQUENESS.md` |
 | Docs | `README.md`, `docs/`, `CHANGELOG.md` |
 
 ## Change workflow
@@ -72,7 +77,8 @@ Read it before touching code.
    - Mobile `390x844`
    - Wide `1920x1080`
 5. Run the manual checks below.
-6. Update `docs/AI_CONTEXT.md` and `CHANGELOG.md`.
+6. Update `docs/AI_CONTEXT.md`, `docs/GETTING_STARTED.md` when usage changed,
+   and `CHANGELOG.md`.
 7. Re-run `npm run verify` after the documentation change.
 8. Only then report completion.
 

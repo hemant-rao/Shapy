@@ -245,7 +245,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import 'shapy';
+import { createSeed } from 'shapy';
 import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy/catalog';
 import { STICKER_CATALOG, getRegistryData } from 'shapy/stickers';
 
@@ -318,9 +318,7 @@ function clearShapes() {
 }
 
 function newSeed() {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  state.seed = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  state.seed = createSeed();
 }
 
 async function copySeed() {

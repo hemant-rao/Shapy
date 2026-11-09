@@ -1,6 +1,7 @@
 import './shapy-bg.js';
 
 export * from './catalog.js';
+export { createSeed } from './seed.js';
 
 function toAttributeName(name) {
   return name.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);

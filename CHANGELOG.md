@@ -25,6 +25,8 @@ All notable changes to Shapy are documented here.
 - The custom element exposes `role="img"` and
   `aria-label="Shapy generative background"` by default; either can be
   overridden by the host.
+- `createSeed()` helper, exported from `shapy`, that returns a fresh
+  32-character hex seed.
 - TypeScript declarations for the package API, catalog, and sticker registry.
 - Public repository README, package README, `AGENTS.md`, `docs/AI_CONTEXT.md`,
   and this changelog.
@@ -35,7 +37,12 @@ All notable changes to Shapy are documented here.
   `https://github.com/hemant-rao/Shapy` in the package manifest.
 - GitHub Actions CI workflow for install, template regeneration, demo build, and
   package dry-run.
-- Root scripts `verify`, `pack:check`, and `publish:shapy`.
+- Root scripts `verify`, `check:repo`, `pack:check`, and `publish:shapy`.
+- Beginner-friendly step-by-step guide in `docs/GETTING_STARTED.md`, a
+  copy-paste `examples/minimal.html`, and the `npm run dev:example` command.
+- Documentation map, quick start, recipes, and troubleshooting sections in the
+  repository and package READMEs.
+- `docs/UNIQUENESS.md` with the full composition-count calculation.
 
 ### Changed
 

@@ -1,4 +1,5 @@
 import { SHAPY_HTML } from './shapy-template.js';
+import { createSeed } from './seed.js';
 
 const ATTRS = [
   'seed', 'palette', 'shape-set', 'layout', 'align', 'motion', 'direction',
@@ -56,16 +57,6 @@ function parseShapes(raw) {
   return value.split(',').map((key) => key.trim()).filter(Boolean);
 }
 
-function makeSeed() {
-  const bytes = new Uint8Array(16);
-  if (globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
-  }
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
 function scopeRendererCss(css) {
   return css
     .replace(/:root\b/g, ':host')
@@ -81,7 +72,7 @@ class ShapyBackground extends (typeof HTMLElement !== 'undefined' ? HTMLElement 
     if (this.attachShadow) this.attachShadow({ mode: 'open' });
     this._initialized = false;
     this._scopeKey = `__shapy_scope_${++scopeId}`;
-    this._defaultSeed = makeSeed();
+    this._defaultSeed = createSeed();
   }
 
   connectedCallback() {

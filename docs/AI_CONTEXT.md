@@ -16,6 +16,7 @@ generative shape background. It also ships:
   panel).
 - A standalone advanced reference demo at `examples/standalone.html`, generated
   from the package renderer source.
+- A small copy-paste example at `examples/minimal.html`.
 
 The repository is a two-workspace monorepo: `packages/shapy` (the npm package)
 and `apps/demo` (private Vue 3 demo). The Vue demo consumes the package through
@@ -33,7 +34,8 @@ check. The public repository is `https://github.com/hemant-rao/Shapy`.
 | `packages/shapy/src/shapy-index.html` | Full renderer template source. The advanced composition lives here. |
 | `packages/shapy/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
 | `packages/shapy/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
-| `packages/shapy/src/index.js` | `createShapy()` API and catalog re-exports. |
+| `packages/shapy/src/index.js` | `createShapy()`, `createSeed()`, and catalog re-exports. |
+| `packages/shapy/src/seed.js` | `createSeed()`: 32-character hex seed generator used by the element and the public API. |
 | `packages/shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
 | `packages/shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
 | `scripts/sync-standalone.mjs` | Copies the renderer source to `examples/standalone.html`. |
@@ -43,8 +45,11 @@ check. The public repository is `https://github.com/hemant-rao/Shapy`.
 | `apps/demo/src/pages/Config.vue` | Full control panel + shape picker. |
 | `apps/demo/src/App.vue` | Floating navigation shell. |
 | `apps/demo/vite.config.js` | Vue custom-element config; the workspace package resolves through its public exports. |
+| `examples/minimal.html` | Small copy-paste example served by `npm run dev:example`. |
 | `examples/standalone.html` | Generated standalone demo. Built from `shapy-index.html` by `npm run build:template`; do not edit by hand. |
-| `README.md` | Public repository documentation, including the unique-composition calculation. |
+| `docs/GETTING_STARTED.md` | Step-by-step beginner guide with recipes and troubleshooting. |
+| `docs/UNIQUENESS.md` | Full seed and settings combination math. |
+| `README.md` | Public repository documentation and documentation map. |
 | `AGENTS.md` | Strict rules for AI-assisted changes. |
 | `CHANGELOG.md` | Change history. |
 
@@ -108,7 +113,7 @@ global `resize` listener trigger re-renders. The host exposes `role="img"` and
 The renderer hashes the full seed string into four 32-bit lanes and seeds
 `sfc32` with a 128-bit state. A 32-character hex seed uses the full 2^128 seed
 space. Including the sticker registry there are 79 selectable shape keys. The
-repository README documents the full combination calculation: approximately
+`docs/UNIQUENESS.md` documents the full combination calculation: approximately
 `1.912345 × 10^76` seed × full-visual-settings combinations, or
 `3.824690 × 10^76` when paused is included. Custom colors and custom image
 registries are unbounded on top of that.

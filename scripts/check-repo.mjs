@@ -11,6 +11,8 @@ const docs = [
   'README.md',
   'packages/shapy/README.md',
   'AGENTS.md',
+  'docs/GETTING_STARTED.md',
+  'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',
   'CHANGELOG.md',
 ];
@@ -111,13 +113,17 @@ const requiredFiles = [
   'LICENSE',
   'AGENTS.md',
   'CHANGELOG.md',
+  'docs/GETTING_STARTED.md',
+  'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',
   '.github/workflows/ci.yml',
   'package.json',
   'package-lock.json',
+  'examples/minimal.html',
   'examples/standalone.html',
   'apps/demo/package.json',
   'packages/shapy/package.json',
+  'packages/shapy/src/seed.js',
   'packages/shapy/src/stickers.js',
   'packages/shapy/stickers.d.ts',
   'scripts/sync-standalone.mjs',
@@ -134,6 +140,8 @@ const currentDocs = [
   'README.md',
   'packages/shapy/README.md',
   'AGENTS.md',
+  'docs/GETTING_STARTED.md',
+  'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',
 ];
 
@@ -184,9 +192,29 @@ checkGroup('package sources contain no TODO/FIXME or eval/new Function', () => {
 });
 
 checkGroup('mount() examples pass an element', () => {
-  for (const doc of ['README.md', 'packages/shapy/README.md']) {
+  for (const doc of ['README.md', 'packages/shapy/README.md', 'docs/GETTING_STARTED.md']) {
     if (/\.mount\(['"]/.test(read(doc))) {
       bad(`${doc}: mount() example still uses a selector string`);
+    }
+  }
+});
+
+checkGroup('minimal example imports the package', () => {
+  if (!/from\s+['"]shapy['"]|import\s+['"]shapy['"]/.test(read('examples/minimal.html'))) {
+    bad('examples/minimal.html does not import shapy');
+  }
+});
+
+checkGroup('createSeed is exported and documented', () => {
+  if (!/export\s*\{\s*createSeed\s*\}/.test(read('packages/shapy/src/index.js'))) {
+    bad('packages/shapy/src/index.js does not export createSeed');
+  }
+  if (!/export function createSeed\(\)/.test(read('packages/shapy/index.d.ts'))) {
+    bad('packages/shapy/index.d.ts does not declare createSeed');
+  }
+  for (const doc of ['README.md', 'packages/shapy/README.md', 'docs/GETTING_STARTED.md']) {
+    if (!/createSeed/.test(read(doc))) {
+      bad(`${doc}: does not document createSeed`);
     }
   }
 });

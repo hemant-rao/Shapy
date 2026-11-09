@@ -5,43 +5,72 @@
 **Seedable generative shape backgrounds for the web.**
 
 Shapy turns a short seed into a one-of-one composition of shapes, lines, organic
-forms, emoji, and optional stickers. It ships as a zero-dependency Web Component
-that works in plain HTML, Vue, React, Svelte, or any framework that can render a
+forms, emoji, and optional stickers. It is a zero-dependency Web Component, so
+it works in plain HTML, Vue, React, Svelte, or any framework that can render a
 custom element.
 
-- Same seed + same settings = the same composition.
-- Every new seed creates a new composition.
-- Responsive sizing: smaller shapes on phones, capped sizes on wide screens.
-- Open Shadow DOM renderer: no iframe, and host-page CSS cannot style the
-  composition's internals.
-- Pick one shape, a custom mix, a whole group, or all shapes.
-- Motion, direction, density, scale, speed, move intensity, alignment, and size
-  variation are all controllable.
-- Optional sticker registry at `shapy/stickers`, plus support for custom image
-  stickers.
+> **New here?** Start with the [step-by-step guide](./docs/GETTING_STARTED.md).
+> It takes you from an empty folder to a working background in a few minutes.
 
-## Package
+## Why Shapy?
 
-| Package | Description |
-| --- | --- |
-| [`shapy`](./packages/shapy) | Core Web Component, renderer, shape catalog, and optional sticker registry |
+- **One tag, no runtime dependencies.** Add `<shapy-background>` and import the
+  package once.
+- **Deterministic.** Same seed + same settings = the same composition.
+- **Shareable.** A seed is a short text you can put in a URL or save in a
+  database.
+- **Flexible.** Pick one shape, a custom mix, a group, or all shapes. Add
+  stickers or your own images.
+- **Responsive.** Shapes shrink on phones and stay capped on wide screens.
+- **Accessible by default.** `role="img"`, an overridable label, and
+  reduced-motion support.
+- **Framework-friendly.** Works with plain HTML, Vue, React, Svelte, and more.
 
-## Install
+## Try it in 2 minutes
+
+The repository includes a minimal example that runs without creating a new
+project.
+
+```bash
+git clone https://github.com/hemant-rao/Shapy.git
+cd Shapy
+npm install
+npm run dev:example
+```
+
+Vite opens `http://localhost:5174/examples/minimal.html`. Click **New pattern**
+to try a new seed.
+
+Want the full demo?
+
+```bash
+npm run dev
+```
+
+Then open `/` for the background-only page and `/config` for the full control
+panel.
+
+## Use it in your project
+
+### 1. Install
 
 ```bash
 npm install shapy
 ```
 
-Stickers ship inside the same package. Import them from the `shapy/stickers`
-subpath when you need them; the core renderer does not depend on them.
+> **Pre-release note:** `shapy` is not on npm yet. Until the first public
+> release, use the repository example above. The npm workflow below is the final
+> setup.
 
-## Quick start
+### 2. Import it once
+
+```js
+import 'shapy';
+```
+
+### 3. Add the element and give it a size
 
 ```html
-<script type="module">
-  import 'shapy';
-</script>
-
 <shapy-background
   seed="4D5E465BCA"
   palette="midnight"
@@ -51,8 +80,21 @@ subpath when you need them; the core renderer does not depend on them.
 ></shapy-background>
 ```
 
-The element fills its parent. Give it a size with CSS, for example
-`position: fixed; inset: 0;` for a full-page background.
+That is a complete full-page background. The element fills its parent; the
+inline style makes it fill the viewport.
+
+## Documentation
+
+- [Step-by-step guide](./docs/GETTING_STARTED.md) — start here if you are new.
+- [Attributes](#attributes) — every option, default, and allowed value.
+- [Choosing shapes](#choosing-shapes) — one shape, a custom mix, or a group.
+- [JavaScript API](#javascript-api) — `createShapy()` and `mount()`.
+- [Vue 3](#vue-3) — compiler setup and a component example.
+- [Optional stickers](#optional-stickers) — sticker registry and custom images.
+- [Seed model](#seed-model) — how deterministic patterns work.
+- [Troubleshooting](#troubleshooting) — common problems and fixes.
+- [How unique is a seed?](./docs/UNIQUENESS.md) — the full math.
+- [Local development](#local-development) — run, test, and build this repo.
 
 ## Attributes
 
@@ -232,6 +274,14 @@ element.setAttribute('size-mode', 'dramatic');
 element.setAttribute('paused', '');
 ```
 
+To create a new pattern, import `createSeed()` and set the `seed` attribute:
+
+```js
+import { createSeed } from 'shapy';
+
+element.setAttribute('seed', createSeed());
+```
+
 ## Vue 3
 
 Register the custom element with the Vue compiler:
@@ -296,110 +346,25 @@ const seed = new URLSearchParams(location.search).get('seed');
 if (seed) element.setAttribute('seed', seed);
 ```
 
-## How many unique compositions?
+## How unique is a seed?
 
-A composition is the result of a seed plus the renderer settings. The counts below
-are conservative: custom colors and custom image registries add unbounded
-combinations on top.
+A 128-bit seed plus the renderer settings gives an astronomically large
+combination space:
 
-### 1. Seed space
+- `2^128` possible seeds.
+- 79 selectable shape keys with the sticker registry (40 shapes + 29 emoji + 10
+  stickers).
+- 8 palettes, 7 layouts, 7 alignments, 7 size modes, 81 density values, 81 scale
+  values, 10 motion modes, 10 directions, 151 speed values, and 171 move values.
+- Custom colors and custom image registries add unbounded combinations.
 
-Shapy uses a 128-bit seed. The seed can be any string; a 32-character hex seed
-uses the full space:
+That is roughly `1.9 × 10^76` seed + settings combinations, before paused state
+and custom content. The full calculation is in
+[How unique is a Shapy composition?](./docs/UNIQUENESS.md).
 
-```text
-2^128 = 340,282,366,920,938,463,463,374,607,431,768,211,456
-      ≈ 3.402823 × 10^38
-```
-
-### 2. Shape pools
-
-Including the sticker registry there are 79 selectable shape keys:
-
-- 40 CSS shapes
-- 29 emoji
-- 10 stickers
-
-Any non-empty custom subset is valid:
-
-```text
-2^79 - 1 = 604,462,909,807,314,587,353,087
-```
-
-There are also six preset pools: `all`, `geometry`, `lines`, `organic`, `emoji`,
-and `stickers`. The `all` preset is the full set, which is already one of the
-custom subsets, so add the five other presets:
-
-```text
-2^79 - 1 + 5 = 2^79 + 4
-             = 604,462,909,807,314,587,353,092
-             ≈ 6.044629 × 10^23
-```
-
-Without the sticker registry there are 69 keys (40 shapes + 29 emoji):
-
-```text
-2^69 + 4 = 590,295,810,358,705,651,716
-         ≈ 5.902958 × 10^20
-```
-
-### 3. Renderer settings
-
-| Setting | Values |
-| --- | ---: |
-| Palette | 8 |
-| Layout | 7 |
-| Alignment | 7 |
-| Size mode | 7 |
-| Density | 81 (`20`–`100`) |
-| Scale | 81 (`60`–`140`) |
-| Safe area | 2 |
-| Motion | 10 |
-| Direction | 10 |
-| Speed | 151 (`50`–`200`) |
-| Move | 171 (`30`–`200`) |
-
-The static visual settings (everything except motion, direction, speed, and move)
-give:
-
-```text
-8 × (2^79 + 4) × 7 × 7 × 7 × 81 × 81 × 2
-= 21,764,755,758,036,901,049,838,517,726,656
-≈ 2.176475 × 10^31
-```
-
-Adding motion, direction, speed, and move gives:
-
-```text
-2.176475 × 10^31 × 10 × 10 × 151 × 171
-≈ 5.619877 × 10^37
-```
-
-### 4. Seed × settings
-
-Multiplying the seed space by the full visual settings gives:
-
-```text
-2^128 × 5.619877 × 10^37
-≈ 1.912345 × 10^76
-```
-
-That is:
-
-```text
-19,123,452,461,856,457,933,376,428,517,312,612,551,350,612,939,048,154,491,048,265,182,342,650,265,600
-```
-
-Pausing animations doubles the runtime states:
-
-```text
-≈ 3.824690 × 10^76
-```
-
-Custom colors and custom image registries are unbounded, so the real number is
-larger. Even this conservative count is so large that two random 128-bit seeds
-producing the same composition is practically impossible. Same seed + same
-settings always reproduces the same result.
+The practical takeaway: two random seeds producing the same composition is
+practically impossible, and the same seed + same settings always reproduces the
+same result.
 
 ## Local development
 
@@ -424,6 +389,7 @@ Useful commands:
 
 ```bash
 npm run dev            # start the Vue demo with Vite
+npm run dev:example    # start the minimal HTML example
 npm run build          # build the Vue demo
 npm run check:repo     # check docs, exports, and generated files
 npm run verify         # regenerate, check, build, and dry-run the package
@@ -447,11 +413,14 @@ Shapy-code/
 ├─ apps/
 │  └─ demo/                    Vue 3 background-only + config demo
 ├─ examples/
+│  ├─ minimal.html             Small copy-paste example
 │  └─ standalone.html          Generated standalone demo (do not edit)
 ├─ scripts/
 │  ├─ sync-standalone.mjs      Copy renderer source to examples/
 │  └─ check-repo.mjs           Docs, package, and generated-file checks
 ├─ docs/
+│  ├─ GETTING_STARTED.md       Step-by-step beginner guide
+│  ├─ UNIQUENESS.md            Full composition-count math
 │  └─ AI_CONTEXT.md            Architecture notes for future work
 ├─ .github/workflows/ci.yml    CI
 ├─ CHANGELOG.md                Change history
@@ -472,12 +441,53 @@ Before publishing, bump versions, update `CHANGELOG.md`, run the demo and
 the manual checks in [`AGENTS.md`](./AGENTS.md), and review the dry-run output.
 Run `npm publish` only after explicit approval and a successful `npm login`.
 
+## Troubleshooting
+
+### Nothing appears
+
+Check these in order:
+
+1. Did you import `shapy`?
+2. Does `shapy-background` have a size? Try
+   `shapy-background { position: fixed; inset: 0; display: block; }`.
+3. Is the element inside the `<body>`?
+4. Check the browser console for errors.
+
+### Vue says "Failed to resolve component: shapy-background"
+
+Add the `isCustomElement` option shown in [Vue 3](#vue-3).
+
+### The pattern changes every time I reload
+
+You did not pass a `seed`. Shapy generates a fresh seed for each element when
+`seed` is missing. Pass a fixed seed to keep the pattern.
+
+### Stickers do not appear
+
+Make sure you import from `shapy/stickers`, set `registry-data` to
+`JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"` or use
+`shape-set="custom"` with sticker keys.
+
+### I changed the seed but the pattern did not change
+
+Attribute changes are debounced by 80 ms. Wait a moment, and make sure you are
+setting the attribute on the `<shapy-background>` element, not on its parent.
+
+### It does not work with server-side rendering
+
+Shapy needs the browser. In Next.js, Nuxt, or another SSR framework, import it
+only on the client (for example inside `useEffect` or `onMounted`).
+
+More fixes are in the [step-by-step guide](./docs/GETTING_STARTED.md#troubleshooting).
+
 ## Browser support
 
 Modern browsers with Custom Elements (including Shadow DOM), CSS custom
 properties, CSS `clip-path`, and CSS animations. The renderer lives in an open
 shadow root, so host-page CSS cannot style its internal elements. The custom
 element exposes `role="img"` and an overridable `aria-label` for accessibility.
+The renderer also respects `prefers-reduced-motion: reduce` by disabling shape
+animations.
 
 ## License
 
