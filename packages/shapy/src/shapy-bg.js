@@ -37,6 +37,26 @@ const OVERRIDES = `
 
 let scopeId = 0;
 
+// CSS color sanity: only allow safe color tokens. Reject anything that could
+// inject url(), javascript:, expression(), or break out of a declaration.
+const CSS_COLOR_RE = /^(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(rgb|rgba|hsl|hsla|hwb|lab|lch|color)\([^)]*\)|[a-z]+(-[a-z]+)*|transparent|currentcolor|inherit|initial|unset|revert)$/;
+
+function sanitizeColor(value) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const token = value.trim();
+  if (!CSS_COLOR_RE.test(token)) return null;
+  // Block any attempt to inject url() or javascript through color values.
+  if (/url\s*\(|javascript\s*:|expression\s*\(|behaviour\s*:|behavior\s*:/i.test(token)) return null;
+  return token;
+}
+
+function sanitizeColors(raw) {
+  if (!raw || !raw.trim()) return [];
+  return raw.split(',')
+    .map((s) => sanitizeColor(s))
+    .filter(Boolean);
+}
+
 function parseRegistry(raw) {
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
@@ -110,7 +130,7 @@ class ShapyBackground extends (typeof HTMLElement !== 'undefined' ? HTMLElement 
       sizeMode: this.getAttribute('size-mode') || 'mixed',
       speed: Number(this.getAttribute('speed') || 100),
       move: Number(this.getAttribute('move') || 100),
-      customColors: this.getAttribute('custom-colors') || '',
+      customColors: sanitizeColors(this.getAttribute('custom-colors') || '').join(','),
       safeArea: this.hasAttribute('safe-area'),
       paused: this.hasAttribute('paused'),
       shapes: parseShapes(this.getAttribute('shapes')),
@@ -169,12 +189,6 @@ class ShapyBackground extends (typeof HTMLElement !== 'undefined' ? HTMLElement 
         else globalThis.removeEventListener(type, handler);
       }
     };
-
-    Object.defineProperty(windowShim, 'ShapyRegistry', {
-      get: () => globalThis.ShapyRegistry,
-      set: (value) => { globalThis.ShapyRegistry = value; },
-      configurable: true
-    });
 
     let resizeObserver = null;
     if (typeof ResizeObserver !== 'undefined') {

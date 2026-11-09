@@ -27,6 +27,10 @@ All notable changes to Shapy are documented here.
   overridden by the host.
 - `createSeed()` helper, exported from `shapy`, that returns a fresh
   32-character hex seed.
+- Security hardening: custom image URLs in `registry-data` are validated
+  (only `http(s)` and safe `data:image/*` allowed); `custom-colors` values are
+  validated against a CSS color allowlist; `ShapyRegistry` is no longer exposed
+  on `globalThis` (per-instance isolation only).
 - TypeScript declarations for the package API, catalog, and sticker registry.
 - Public repository README, package README, `AGENTS.md`, `docs/AI_CONTEXT.md`,
   and this changelog.

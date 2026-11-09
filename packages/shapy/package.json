@@ -69,6 +69,9 @@
     "animated-background"
   ],
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "publishConfig": {
     "access": "public"
   }

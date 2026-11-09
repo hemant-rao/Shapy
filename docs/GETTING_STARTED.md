@@ -524,5 +524,38 @@ This registers `<shapy-background>` without importing the catalog exports.
 - [Full Vue demo](../apps/demo)
 - [Minimal example](../examples/minimal.html)
 
+## Security
+
+Shapy is designed to be safe by default:
+
+- **Zero dependencies** — nothing in `node_modules` can introduce a supply-chain issue.
+- **No `eval`, `new Function`, or `innerHTML` from user input** — all attributes are parsed with `JSON.parse` inside try/catch, and DOM nodes are created with `createElement`/`textContent`.
+- **Shadow DOM** — the renderer lives inside an open shadow root, isolated from host-page CSS and JS.
+- **Custom images** — `registry-data` image URLs are validated: only `http(s)` and safe `data:image/*` are allowed. `javascript:`, `data:text/html`, and other schemes are dropped.
+- **Custom colors** — `custom-colors` values are validated against a CSS color allowlist. Anything unsafe is ignored.
+- **Isolated registry** — the sticker registry is passed per-element instance, not stored on a global.
+
+### Safe custom image example
+
+```js
+import { STICKER_CATALOG } from 'shapy/stickers';
+
+const registry = {
+  stickers: {
+    label: 'Stickers',
+    items: [
+      { key: 'safe-img', label: 'Safe', image: 'https://example.com/logo.png', size: 1 },
+      { key: 'bad-img', label: 'Blocked', image: 'javascript:alert(1)', size: 1 } // dropped
+    ]
+  }
+};
+
+background.setAttribute('registry-data', JSON.stringify(registry));
+background.setAttribute('shape-set', 'custom');
+background.setAttribute('shapes', 'safe-img,bad-img');
+```
+
+Only `safe-img` will render; `bad-img` is dropped because its URL is unsafe.
+
 If something is unclear, open an issue:
 <https://github.com/hemant-rao/Shapy/issues>.

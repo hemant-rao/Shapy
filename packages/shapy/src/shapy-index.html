@@ -1226,13 +1226,40 @@
       paletteDots.innerHTML = p.shapes.map((color) => `<span class="palette-dot" style="background:${color}"></span>`).join('');
     }
 
-    window.ShapyRegistry = window.ShapyRegistry || {};
     const EMOJI_POOL = ['⭐','✨','❄️','🔥','💧','🌙','☀️','⚡','🌈','🎈','🎨','🎯','🌀','💫','🔮','🧩','🎲','🍀','🌸','🍄','🪐','🌪️','❤️','💙','💚','💛','💜','🖤','🤍'];
+
+    // Only allow http(s) or safe data:image/* URLs for custom images. Blocks
+    // javascript:, data:text/html, and other dangerous schemes.
+    const SAFE_IMAGE_RE = /^(https?:)?\/\/|^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);/;
+
+    function sanitizeImageUrl(url) {
+      if (typeof url !== 'string' || !url.trim()) return null;
+      const trimmed = url.trim();
+      if (!SAFE_IMAGE_RE.test(trimmed)) return null;
+      // Strip any data URI that is not an image.
+      if (trimmed.startsWith('data:') && !/^data:image\//i.test(trimmed)) return null;
+      return trimmed;
+    }
+
+    const CSS_COLOR_RE = /^(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(rgb|rgba|hsl|hsla|hwb|lab|lch|color)\([^)]*\)|[a-z]+(-[a-z]+)*|transparent|currentcolor|inherit|initial|unset|revert)$/;
+
+    function sanitizeColor(value) {
+      if (typeof value !== 'string' || !value.trim()) return null;
+      const token = value.trim();
+      if (!CSS_COLOR_RE.test(token)) return null;
+      if (/url\s*\(|javascript\s*:|expression\s*\(|behaviour\s*:|behavior\s*:/i.test(token)) return null;
+      return token;
+    }
+
+    function sanitizeColors(raw) {
+      if (!raw || !raw.trim()) return [];
+      return raw.split(',').map((s) => sanitizeColor(s)).filter(Boolean);
+    }
 
     /* ---------- shape selection + motion ---------- */
 
     function getPool() {
-      const registry = window.ShapyRegistry;
+      const registry = state.registry;
       if (state.shapeSet === 'custom') {
         const wanted = new Set(Array.isArray(state.shapes) ? state.shapes : []);
         const all = getAllEntries();
@@ -1558,11 +1585,13 @@
         inner.style.background = 'transparent';
         inner.style.color = 'currentColor';
       } else if (def.image) {
+        const safeImage = sanitizeImageUrl(def.image);
+        if (!safeImage) break; // skip unsafe image entirely
         inner.style.display = 'grid';
         inner.style.placeItems = 'center';
         inner.style.background = 'transparent';
         const img = document.createElement('img');
-        img.src = def.image;
+        img.src = safeImage;
         img.alt = def.label || '';
         img.draggable = false;
         img.style.width = '100%';
@@ -1635,8 +1664,9 @@
       }
 
       let colorPool;
-      if (state.customColors && state.customColors.trim()) {
-        colorPool = state.customColors.split(',').map(s => s.trim()).filter(Boolean);
+      const safeColors = sanitizeColors(state.customColors);
+      if (safeColors.length) {
+        colorPool = safeColors;
       } else {
         colorPool = [...palette.shapes];
       }

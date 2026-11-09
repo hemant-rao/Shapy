@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "npm --workspace @shapy/demo run dev",
+    "dev:example": "vite . --port 5174 --open /examples/minimal.html",
     "build": "npm --workspace @shapy/demo run build",
     "build:template": "npm --workspace shapy run build:template && node scripts/sync-standalone.mjs",
     "check:repo": "node scripts/check-repo.mjs",

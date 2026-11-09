@@ -45,6 +45,11 @@ Read it before touching code.
 11. **Security:** treat attribute data as untrusted. Parse `registry-data` with
     `JSON.parse` and never inject unsanitized JSON or HTML into the renderer. Do
     not add `eval`, `new Function`, or unsanitized HTML injection.
+    - Validate `custom-colors` against a CSS color allowlist; drop unsafe tokens.
+    - Validate `registry-data` image URLs: only `http(s)` and safe `data:image/*`;
+      drop `javascript:`, `data:text/html`, and other schemes.
+    - Keep `ShapyRegistry` per-instance; never expose on `globalThis`.
+    - Never set `img.src` or any attribute from user data without sanitization.
 12. **Accessibility:** preserve the custom element's accessible title and
     keyboard-operable controls in the demo.
 

@@ -53,6 +53,7 @@ export interface ShapyRegistryItem {
   key: string;
   label?: string;
   emoji?: string;
+  /** Image URL. Only http(s) and safe data:image/* are allowed; others are dropped. */
   image?: string;
   size?: number;
   weight?: number;
@@ -82,6 +83,7 @@ export interface ShapyOptions {
   'size-mode'?: ShapySizeMode;
   speed?: number;
   move?: number;
+  /** Comma-separated CSS color strings. Unsafe tokens are dropped. */
   customColors?: string;
   'custom-colors'?: string;
   safeArea?: boolean;
