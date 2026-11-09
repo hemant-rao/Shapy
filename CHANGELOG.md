@@ -65,9 +65,11 @@ All notable changes to Shapy are documented here.
   `window.ShapyRegistry` proxies to `globalThis.ShapyRegistry`.
 - Package metadata is publish-ready with `exports`, `types`, `files`,
   `sideEffects`, and `prepack` template generation.
-- Repository restructured into two root-level workspaces: `shapy/` and
-  `vue-demo/`. The Vue demo now consumes the package through its public exports,
-  including the `shapy/stickers` subpath, instead of Vite source aliases.
+- Repository organized as a two-workspace monorepo: `packages/shapy` (the
+  published package) and `apps/demo` (private Vue 3 demo). The standalone demo
+  lives at `examples/standalone.html`, and the changelog is at the repository
+  root. The Vue demo consumes the package through its public exports, including
+  the `shapy/stickers` subpath, instead of Vite source aliases.
 - The optional sticker registry is now part of the core `shapy` package as the
   `shapy/stickers` subpath. One npm package ships the component, catalog, and
   sticker registry; `shapy-stickers` is no longer a separate package.
@@ -77,7 +79,7 @@ All notable changes to Shapy are documented here.
   when no `seed` attribute is supplied. Explicit seeds remain deterministic.
 - Vue demo "New pattern" seeds now use the full 32 hex characters (128 bits).
 - README, package README, `AGENTS.md`, and `docs/AI_CONTEXT.md` now use the
-  root-level workspace paths and new publishing commands.
+  monorepo paths and new publishing commands.
 - Vue demo dev tooling upgraded to Vite 8 and `@vitejs/plugin-vue` 6, clearing
   the previous dev-server `npm audit` advisories. The published package remains
   zero-dependency.
@@ -99,8 +101,8 @@ All notable changes to Shapy are documented here.
   leaking scoped globals.
 - Host-page CSS selectors cannot style shadow renderer elements, including
   aggressive `!important` rules.
-- The standalone `index.html` demo and the Vue demo now use an inline favicon,
-  removing the `/favicon.ico` 404 from the browser console.
+- The `examples/standalone.html` demo and the Vue demo now use an inline
+  favicon, removing the `/favicon.ico` 404 from the browser console.
 - Sticker groups fall back gracefully when no sticker registry is provided.
 - `shapy` package no longer references missing `src/index.mjs`,
   `src/index.d.ts`, or build scripts that were not installed.
@@ -119,4 +121,4 @@ All notable changes to Shapy are documented here.
 - Direction control, density, scale, speed, move intensity, custom colors,
   safe area, pause, seed copy, and reset.
 - Vue demo with background-only and config-play pages.
-- Standalone advanced reference demo at `index.html`.
+- Standalone advanced reference demo at `examples/standalone.html`.

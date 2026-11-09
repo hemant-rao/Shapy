@@ -4,12 +4,12 @@
   "private": true,
   "description": "Monorepo for the shapy generative background Web Component.",
   "workspaces": [
-    "shapy",
-    "vue-demo"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
-    "dev": "npm --workspace vue-demo run dev",
-    "build": "npm --workspace vue-demo run build",
+    "dev": "npm --workspace @shapy/demo run dev",
+    "build": "npm --workspace @shapy/demo run build",
     "build:template": "npm --workspace shapy run build:template",
     "verify": "npm run build:template && npm run build && npm run pack:check",
     "pack:shapy": "npm pack --workspace shapy",

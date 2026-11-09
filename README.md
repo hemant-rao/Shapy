@@ -22,7 +22,7 @@ custom element.
 
 | Package | Description |
 | --- | --- |
-| [`shapy`](./shapy) | Core Web Component, renderer, shape catalog, and optional sticker registry |
+| [`shapy`](./packages/shapy) | Core Web Component, renderer, shape catalog, and optional sticker registry |
 
 ## Install
 
@@ -270,7 +270,7 @@ import 'shapy';
 </template>
 ```
 
-The demo app in [`vue-demo`](./vue-demo) contains a full control panel
+The demo app in [`apps/demo`](./apps/demo) contains a full control panel
 with palette, shape picker, layout, alignment, size mode, motion, direction,
 density, scale, speed, move intensity, custom colors, safe area, pause, seed
 actions, and sticker selection.
@@ -409,14 +409,14 @@ npm run dev
 ```
 
 The demo runs with Vite. The template is generated from
-`shapy/src/shapy-index.html`:
+`packages/shapy/src/shapy-index.html`:
 
 ```bash
 npm run build:template
 ```
 
-Never edit `shapy/src/shapy-template.js` by hand. Edit the source HTML and
-regenerate.
+Never edit `packages/shapy/src/shapy-template.js` by hand. Edit the source HTML
+and regenerate.
 
 Useful commands:
 
@@ -431,19 +431,28 @@ npm run pack:check     # dry-run the package tarball
 ## Project structure
 
 ```
-shapy/
-├─ shapy/                    Core npm package
-│  ├─ src/shapy-bg.js        Custom element + attribute mapping
-│  ├─ src/shapy-index.html   Advanced renderer template source
-│  ├─ src/shapy-template.js  Generated HTML string (do not edit)
-│  ├─ src/catalog.js         Core shape + emoji catalog
-│  ├─ src/stickers.js        Optional sticker registry
-│  ├─ src/index.js           Public createShapy() API
-│  └─ scripts/               Template build script
-├─ vue-demo/                 Vue 3 background-only + full config demo
-├─ index.html                Standalone advanced reference demo
-├─ docs/                     AI context and changelog
-└─ AGENTS.md                 Rules for AI-assisted changes
+Shapy-code/
+├─ packages/
+│  └─ shapy/                   Published npm package
+│     ├─ src/shapy-bg.js       Custom element + attribute mapping
+│     ├─ src/shapy-index.html  Renderer template source
+│     ├─ src/shapy-template.js Generated HTML string (do not edit)
+│     ├─ src/catalog.js        Core shape + emoji catalog
+│     ├─ src/stickers.js       Optional sticker registry
+│     ├─ src/index.js          Public createShapy() API
+│     └─ scripts/              Template build script
+├─ apps/
+│  └─ demo/                    Vue 3 background-only + config demo
+├─ examples/
+│  └─ standalone.html          Standalone advanced reference demo
+├─ docs/
+│  └─ AI_CONTEXT.md            Architecture notes for future work
+├─ .github/workflows/ci.yml    CI
+├─ CHANGELOG.md                Change history
+├─ AGENTS.md                   Rules for AI-assisted changes
+├─ README.md                   Public documentation
+├─ package.json                Workspace root and scripts
+└─ package-lock.json           Lockfile (commit this)
 ```
 
 ## Publishing
@@ -453,7 +462,7 @@ npm run pack:check
 npm run publish:shapy
 ```
 
-Before publishing, bump versions, update `docs/CHANGELOG.md`, run the demo and
+Before publishing, bump versions, update `CHANGELOG.md`, run the demo and
 the manual checks in [`AGENTS.md`](./AGENTS.md), and review the dry-run output.
 Run `npm publish` only after explicit approval and a successful `npm login`.
 

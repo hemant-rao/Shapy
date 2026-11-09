@@ -14,12 +14,12 @@ generative shape background. It also ships:
   the core package as a subpath.
 - A Vue demo with two pages: `/` (background only) and `/config` (full control
   panel).
-- A standalone advanced reference demo at the repository root (`index.html`).
+- A standalone advanced reference demo at `examples/standalone.html`.
 
-The repository uses two root-level workspaces: `shapy/` (the npm package) and
-`vue-demo/` (private Vue 3 demo). The Vue demo consumes the package through its
-public exports, including the `shapy/stickers` subpath; there are no Vite source
-aliases.
+The repository is a two-workspace monorepo: `packages/shapy` (the npm package)
+and `apps/demo` (private Vue 3 demo). The Vue demo consumes the package through
+its public exports, including the `shapy/stickers` subpath; there are no Vite
+source aliases.
 
 The package is pre-publish. The npm name `shapy` is available as of the last
 check. The public repository is `https://github.com/hemant-rao/Shapy`.
@@ -28,22 +28,22 @@ check. The public repository is `https://github.com/hemant-rao/Shapy`.
 
 | Path | Purpose |
 | --- | --- |
-| `shapy/src/shapy-bg.js` | Custom element, open shadow root, CSS scoping, document/window shims, lifecycle. |
-| `shapy/src/shapy-index.html` | Full renderer template source. The advanced composition lives here. |
-| `shapy/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
-| `shapy/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
-| `shapy/src/index.js` | `createShapy()` API and catalog re-exports. |
-| `shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
-| `shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
-| `shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers()`; exposed as `shapy/stickers`. |
-| `vue-demo/src/pages/Home.vue` | Background-only demo. |
-| `vue-demo/src/pages/Config.vue` | Full control panel + shape picker. |
-| `vue-demo/src/App.vue` | Floating navigation shell. |
-| `vue-demo/vite.config.js` | Vue custom-element config; the workspace package resolves through its public exports. |
-| `index.html` | Standalone advanced reference demo. Keep the renderer source byte-identical to `shapy-index.html`. |
+| `packages/shapy/src/shapy-bg.js` | Custom element, open shadow root, CSS scoping, document/window shims, lifecycle. |
+| `packages/shapy/src/shapy-index.html` | Full renderer template source. The advanced composition lives here. |
+| `packages/shapy/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
+| `packages/shapy/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
+| `packages/shapy/src/index.js` | `createShapy()` API and catalog re-exports. |
+| `packages/shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
+| `packages/shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
+| `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers()`; exposed as `shapy/stickers`. |
+| `apps/demo/src/pages/Home.vue` | Background-only demo. |
+| `apps/demo/src/pages/Config.vue` | Full control panel + shape picker. |
+| `apps/demo/src/App.vue` | Floating navigation shell. |
+| `apps/demo/vite.config.js` | Vue custom-element config; the workspace package resolves through its public exports. |
+| `examples/standalone.html` | Standalone advanced reference demo. Keep the renderer source byte-identical to `shapy-index.html`. |
 | `README.md` | Public repository documentation, including the unique-composition calculation. |
 | `AGENTS.md` | Strict rules for AI-assisted changes. |
-| `docs/CHANGELOG.md` | Change history. |
+| `CHANGELOG.md` | Change history. |
 
 ## Rendering pipeline
 
@@ -249,10 +249,10 @@ Shape picker behavior:
 
 ## Build
 
-After editing `shapy/src/shapy-index.html`:
+After editing `packages/shapy/src/shapy-index.html`:
 
 ```bash
-node shapy/scripts/build-template.mjs
+node packages/shapy/scripts/build-template.mjs
 ```
 
 or:
@@ -261,10 +261,11 @@ or:
 npm run build:template
 ```
 
-This writes `shapy/src/shapy-template.js`. The root `index.html` is a separate
-copy of the renderer logic and must be updated in parallel when the renderer
-changes. `npm run verify` regenerates the template, builds the Vue demo, and
-runs `npm pack --dry-run` for the package.
+This writes `packages/shapy/src/shapy-template.js`. The
+`examples/standalone.html` file is a separate copy of the renderer logic and
+must be updated in parallel when the renderer changes. `npm run verify`
+regenerates the template, builds the Vue demo, and runs `npm pack --dry-run` for
+the package.
 
 ## Testing
 
@@ -292,15 +293,16 @@ Checks that matter:
   seeds differ; two no-seed elements get distinct 32-char hex seeds
 - host resize, attribute updates, disconnect/reconnect, and zero leaked
   `__shapy_scope_*` globals
-- standalone `index.html` still renders and responds to its scale slider
+- standalone `examples/standalone.html` still renders and responds to its scale
+  slider
 
 ## Known limitations / technical debt
 
 1. **Shadow DOM is required.** The renderer needs Custom Elements and
    `attachShadow`; there is no light-DOM fallback. If Shadow DOM is unavailable,
    the component renders nothing.
-2. **Duplicated renderer source.** `index.html` and `shapy-index.html` must be
-   kept byte-identical manually.
+2. **Duplicated renderer source.** `examples/standalone.html` and
+   `packages/shapy/src/shapy-index.html` must be kept byte-identical manually.
 3. **No automated test suite.** Verification is currently manual/Playwright.
 4. **Not published.** Version `0.1.0` is ready for a dry run but has not been
    pushed to npm. The GitHub repository is configured in the package manifest.

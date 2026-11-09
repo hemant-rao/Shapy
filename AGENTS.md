@@ -8,7 +8,7 @@ Read it before touching code.
 1. Read `docs/AI_CONTEXT.md`.
 2. Read only the files relevant to the task. Do not scan the whole repository
    unless the task genuinely requires it.
-3. Read `docs/CHANGELOG.md` before changing public behavior.
+3. Read `CHANGELOG.md` before changing public behavior.
 4. If a requirement is ambiguous, stop and ask. Never assume.
 
 ## Non-negotiable rules
@@ -16,7 +16,7 @@ Read it before touching code.
 1. **Update documentation after every change.**
    - Update `docs/AI_CONTEXT.md` whenever architecture, files, behavior, or
      known limitations change.
-   - Add an entry to `docs/CHANGELOG.md` for every user-visible change.
+   - Add an entry to `CHANGELOG.md` for every user-visible change.
    - Update `README.md` and the package README when the public API changes.
 2. **Only make necessary changes.** No drive-by refactors, no speculative
    features, no "while I'm here" rewrites.
@@ -24,15 +24,15 @@ Read it before touching code.
    file is generated, unused, or explicitly approved. Do not remove user work.
 4. **Never assume.** Inspect the implementation and test the behavior.
 5. **No extra code.** Prefer the smallest change that satisfies the requirement.
-6. **Never edit `shapy/src/shapy-template.js` by hand.** It is generated from
-   `shapy/src/shapy-index.html`.
+6. **Never edit `packages/shapy/src/shapy-template.js` by hand.** It is generated
+   from `packages/shapy/src/shapy-index.html`.
 7. **Keep the two renderer sources in sync.**
-   - `shapy/src/shapy-index.html` is the package template source.
-   - `index.html` is the standalone advanced reference demo.
+   - `packages/shapy/src/shapy-index.html` is the package template source.
+   - `examples/standalone.html` is the standalone advanced reference demo.
    - Apply renderer changes to both, then regenerate the template.
 8. **Regenerate after renderer edits:**
    ```bash
-   node shapy/scripts/build-template.mjs
+   node packages/shapy/scripts/build-template.mjs
    ```
 9. **Test multiple times after each task.** Fix failures, re-test, then save.
    Do not report a task as complete after a single successful run.
@@ -48,28 +48,29 @@ Read it before touching code.
 
 | Concern | File |
 | --- | --- |
-| Custom element + attributes | `shapy/src/shapy-bg.js` |
-| Public JS API | `shapy/src/index.js` |
-| Public types | `shapy/index.d.ts`, `catalog.d.ts` |
-| Renderer source | `shapy/src/shapy-index.html` |
-| Generated renderer | `shapy/src/shapy-template.js` |
-| Shape + emoji catalog | `shapy/src/catalog.js` |
-| Optional stickers | `shapy/src/stickers.js` (exposed as `shapy/stickers`) |
-| Demo config UI | `vue-demo/src/pages/Config.vue` |
-| Demo background page | `vue-demo/src/pages/Home.vue` |
-| Docs | `README.md`, `docs/` |
+| Custom element + attributes | `packages/shapy/src/shapy-bg.js` |
+| Public JS API | `packages/shapy/src/index.js` |
+| Public types | `packages/shapy/index.d.ts`, `catalog.d.ts` |
+| Renderer source | `packages/shapy/src/shapy-index.html` |
+| Generated renderer | `packages/shapy/src/shapy-template.js` |
+| Shape + emoji catalog | `packages/shapy/src/catalog.js` |
+| Optional stickers | `packages/shapy/src/stickers.js` (exposed as `shapy/stickers`) |
+| Demo config UI | `apps/demo/src/pages/Config.vue` |
+| Demo background page | `apps/demo/src/pages/Home.vue` |
+| Docs | `README.md`, `docs/`, `CHANGELOG.md` |
 
 ## Change workflow
 
 1. Inspect the relevant code and current behavior.
 2. Write the smallest possible change.
-3. If the renderer changed, mirror it to `index.html` and regenerate the template.
+3. If the renderer changed, mirror it to `examples/standalone.html` and regenerate
+   the template.
 4. Run the demo and verify visually and programmatically:
    - Desktop `1350x800`
    - Mobile `390x844`
    - Wide `1920x1080`
 5. Run the manual checks below.
-6. Update `docs/AI_CONTEXT.md` and `docs/CHANGELOG.md`.
+6. Update `docs/AI_CONTEXT.md` and `CHANGELOG.md`.
 7. Re-run the checks after the documentation change.
 8. Only then report completion.
 
@@ -91,8 +92,8 @@ Read it before touching code.
 
 ## Publishing checklist
 
-- [ ] Version bumped in `shapy/package.json`.
-- [ ] `docs/CHANGELOG.md` updated.
+- [ ] Version bumped in `packages/shapy/package.json`.
+- [ ] `CHANGELOG.md` updated.
 - [ ] `npm run build:template` run after the last renderer edit.
 - [ ] `npm run verify` succeeds.
 - [ ] `npm run pack:check` output reviewed.

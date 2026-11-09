@@ -22,7 +22,7 @@ jobs:
       - name: Regenerate renderer template
         run: npm run build:template
       - name: Verify generated template is current
-        run: git diff --exit-code -- shapy/src/shapy-template.js
+        run: git diff --exit-code -- packages/shapy/src/shapy-template.js
       - name: Build Vue demo
         run: npm run build
       - name: Check package tarballs
