@@ -68,8 +68,8 @@ npm install
 npm run dev:example
 ```
 
-Vite opens `http://localhost:5174/examples/minimal.html`. Click **New pattern**
-to generate a fresh seed.
+Vite opens `http://localhost:5173/examples/minimal.html` (or whatever port Vite prints).
+Click **New pattern** to generate a fresh seed.
 
 What the example demonstrates:
 
