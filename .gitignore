@@ -1,0 +1,28 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.chrome-tmp/
+
+# Local test artifacts
+pw-test.png
+home-test*.png
+desktop-test.png
+mobile-test.png
+wide-test.png
+config-test*.png
+config-interaction.png
+config-picker.png
+seed-*.png
+orig-*.png
+
+# Internal scratch files
+check.js
+inspect.mjs
+REQUIREMENTS_CHECK.md
+draft.md

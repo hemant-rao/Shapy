@@ -1,0 +1,74 @@
+{
+  "name": "shapy",
+  "version": "0.1.0",
+  "description": "Seedable generative shape backgrounds as a zero-dependency Web Component.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemant-rao/Shapy.git",
+    "directory": "shapy"
+  },
+  "homepage": "https://github.com/hemant-rao/Shapy#readme",
+  "bugs": {
+    "url": "https://github.com/hemant-rao/Shapy/issues"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./catalog": {
+      "types": "./catalog.d.ts",
+      "import": "./src/catalog.js",
+      "default": "./src/catalog.js"
+    },
+    "./element": {
+      "types": "./index.d.ts",
+      "import": "./src/shapy-bg.js",
+      "default": "./src/shapy-bg.js"
+    },
+    "./stickers": {
+      "types": "./stickers.d.ts",
+      "import": "./src/stickers.js",
+      "default": "./src/stickers.js"
+    }
+  },
+  "files": [
+    "src/shapy-bg.js",
+    "src/shapy-template.js",
+    "src/index.js",
+    "src/catalog.js",
+    "src/stickers.js",
+    "index.d.ts",
+    "catalog.d.ts",
+    "stickers.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./src/shapy-bg.js"
+  ],
+  "scripts": {
+    "build:template": "node scripts/build-template.mjs",
+    "prepack": "node scripts/build-template.mjs"
+  },
+  "keywords": [
+    "shapy",
+    "generative",
+    "background",
+    "shapes",
+    "web-component",
+    "custom-element",
+    "emoji",
+    "seed",
+    "animated-background"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

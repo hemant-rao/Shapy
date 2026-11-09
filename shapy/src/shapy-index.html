@@ -1,0 +1,2008 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Shapy — Generative Shape Backgrounds</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%237DD3FC'/%3E%3C/svg%3E">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --ease: cubic-bezier(.22, 1, .36, 1);
+    --bg: #0A0F1E;
+    --ink: #F8FAFC;
+    --muted: #94A3B8;
+    --accent: #7DD3FC;
+    --accent-ink: #06121F;
+    --panel: rgba(10, 15, 30, .62);
+    --border: rgba(148, 163, 184, .18);
+    --scrim: rgba(10, 15, 30, .62);
+    --glow: rgba(125, 211, 252, .10);
+  }
+
+  html, body { margin: 0; min-height: 100%; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  .app {
+    position: relative;
+    min-height: 100svh;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  /* ---------- background layers ---------- */
+
+  .bg, .ambient, .shapes, .scrim, .grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .bg {
+    z-index: 0;
+    background:
+      radial-gradient(120% 100% at 18% 0%, var(--glow), transparent 62%),
+      radial-gradient(100% 100% at 92% 100%, var(--glow), transparent 62%);
+  }
+
+  .ambient { z-index: 1; }
+  .shapes { z-index: 2; }
+
+  .scrim {
+    z-index: 3;
+    background:
+      radial-gradient(75% 80% at 26% 48%, var(--scrim) 0%, transparent 68%),
+      linear-gradient(90deg, var(--scrim) 0%, transparent 58%),
+      linear-gradient(0deg, var(--scrim) 0%, transparent 30%);
+  }
+
+  .grain {
+    z-index: 4;
+    opacity: .04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.6'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* ---------- top bar ---------- */
+
+  .topbar {
+    position: fixed;
+    z-index: 30;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px clamp(20px, 4vw, 48px);
+    pointer-events: none;
+  }
+
+  .topbar > * { pointer-events: auto; }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    color: inherit;
+  }
+
+  .brand__mark {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 18px;
+  }
+
+  .mark-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .mark-tri { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 8px solid var(--ink); }
+  .mark-square { width: 7px; height: 7px; background: var(--ink); }
+
+  .brand__name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    letter-spacing: -.02em;
+    line-height: 1;
+  }
+
+  .brand__name sup {
+    font-family: var(--font-sans);
+    font-size: 8px;
+    vertical-align: super;
+    opacity: .45;
+    margin-left: 2px;
+  }
+
+  .topbar__meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 11px;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+
+  .pill {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 5px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    position: relative;
+    z-index: 10;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(110px, 14vh, 160px) clamp(20px, 5vw, 72px) clamp(90px, 12vh, 130px);
+    padding-right: clamp(20px, 30vw, 430px);
+  }
+
+  .hero__copy { max-width: 760px; }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .eyebrow .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
+  .headline {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(58px, 8.6vw, 128px);
+    line-height: .86;
+    letter-spacing: -.045em;
+  }
+
+  .headline em { font-style: italic; color: var(--accent); }
+
+  .lede {
+    margin: 28px 0 0;
+    max-width: 48ch;
+    font-size: clamp(15px, 1.2vw, 17px);
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  [contenteditable="true"] {
+    outline: none;
+    cursor: text;
+    border-radius: 6px;
+    transition: box-shadow .2s var(--ease);
+  }
+
+  [contenteditable="true"]:hover {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  [contenteditable="true"]:focus-visible {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 34px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    transition: transform .25s var(--ease), background .25s, border-color .25s, box-shadow .25s;
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+  .btn:active { transform: translateY(0); }
+
+  .btn--primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+
+  .btn--primary:hover {
+    box-shadow: 0 14px 40px color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+
+  .btn--ghost {
+    background: color-mix(in srgb, var(--panel) 70%, transparent);
+    border-color: var(--border);
+    color: var(--ink);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .btn--ghost:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .btn svg { width: 15px; height: 15px; flex: none; }
+
+  .seedline {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 26px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .seedline__label {
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    font-size: 9px;
+  }
+
+  .seedline code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+    border: 1px solid var(--border);
+    padding: 4px 7px;
+    border-radius: 5px;
+  }
+
+  .seedline__palette {
+    display: flex;
+    gap: 4px;
+    margin-left: 4px;
+  }
+
+  .palette-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .seedline__badge {
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  /* ---------- control panel ---------- */
+
+  .panel {
+    position: fixed;
+    z-index: 25;
+    top: 50%;
+    right: clamp(16px, 3vw, 40px);
+    transform: translateY(-50%);
+    width: min(310px, calc(100vw - 32px));
+    max-height: calc(100svh - 120px);
+    overflow: auto;
+    padding: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(26px) saturate(1.25);
+    -webkit-backdrop-filter: blur(26px) saturate(1.25);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .panel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .panel__head h2 {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .iconbtn {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    color: var(--ink);
+    transition: background .2s;
+  }
+
+  .iconbtn:hover { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+  .iconbtn svg { width: 12px; height: 12px; }
+
+  .field { margin-bottom: 14px; }
+
+  .field label,
+  .field__row label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 10px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .field__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .field__row output {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink);
+  }
+
+  .select-wrap { position: relative; }
+
+  .select-wrap::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--muted);
+    transform: translateY(-30%);
+    pointer-events: none;
+  }
+
+  select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 10px 30px 10px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--ink) 5%, transparent);
+    color: var(--ink);
+    font-size: 12px;
+    outline: none;
+  }
+
+  select:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+
+  select option { background: var(--bg); color: var(--ink); }
+
+  input[type="range"] {
+    width: 100%;
+    height: 4px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 4px;
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .toggle__ui {
+    width: 34px;
+    height: 20px;
+    flex: none;
+    position: relative;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--ink) 12%, transparent);
+    transition: background .2s, border-color .2s;
+  }
+
+  .toggle__ui::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform .2s var(--ease), background .2s;
+  }
+
+  .toggle input:checked + .toggle__ui {
+    background: color-mix(in srgb, var(--accent) 35%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+
+  .toggle input:checked + .toggle__ui::after {
+    transform: translateX(14px);
+    background: var(--accent);
+  }
+
+  .toggle input:focus-visible + .toggle__ui {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+
+  .panel__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .textbtn {
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .textbtn:hover { color: var(--ink); }
+
+  /* ---------- footer + toast ---------- */
+
+  .footer {
+    position: fixed;
+    z-index: 20;
+    left: clamp(20px, 4vw, 48px);
+    right: clamp(20px, 4vw, 48px);
+    bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .footer__right { display: flex; gap: 8px; align-items: center; }
+
+  .toast {
+    position: fixed;
+    z-index: 50;
+    left: 50%;
+    bottom: 34px;
+    transform: translate(-50%, 12px);
+    opacity: 0;
+    pointer-events: none;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 600;
+    transition: opacity .25s, transform .25s var(--ease);
+  }
+
+  .toast.is-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* ---------- shapes + animation ---------- */
+
+  .shape {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    height: var(--h);
+    transform: translate(-50%, -50%);
+  }
+
+  .shape__inner {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--c);
+    opacity: var(--o);
+    transform: rotate(var(--r));
+    transform-origin: 50% 50%;
+    animation-name: var(--anim);
+    animation-duration: var(--dur);
+    animation-delay: var(--delay);
+    animation-timing-function: var(--ease, ease-in-out);
+    animation-iteration-count: var(--iterations, infinite);
+    animation-direction: var(--adir, alternate);
+    animation-play-state: var(--play, running);
+    will-change: transform;
+  }
+
+  .app.is-paused .shape__inner { animation-play-state: paused; }
+
+  @keyframes float {
+    0%   { transform: translate3d(0, 0, 0) rotate(var(--r)) scale(1); }
+    100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--r) + var(--spin))) scale(var(--sc, 1.04)); }
+  }
+
+  @keyframes drift {
+    0%   { transform: translate3d(calc(var(--dx) * -1), calc(var(--dy) * -1), 0) rotate(var(--r)) scale(1); }
+    100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--r) + var(--spin))) scale(1.03); }
+  }
+
+  @keyframes flow {
+    0%   { transform: translate3d(calc(var(--dx) * -1), calc(var(--dy) * -1), 0) rotate(var(--r)) scale(.2); opacity: 0; }
+    8%   { opacity: var(--o); transform: translate3d(calc(var(--dx) * -0.9), calc(var(--dy) * -0.9), 0) rotate(var(--r)) scale(1); }
+    92%  { opacity: var(--o); }
+    100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--r) + var(--spin))) scale(.2); opacity: 0; }
+  }
+
+  @keyframes grow {
+    0%   { transform: scale(.2) rotate(var(--r)); opacity: 0; }
+    100% { transform: scale(1) rotate(var(--r)); opacity: var(--o); }
+  }
+
+  @keyframes bounce {
+    0%   { transform: translate3d(0, 0, 0) rotate(var(--r)) scale(1); }
+    100% { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--r) + var(--spin))) scale(1); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(var(--r)); }
+    to   { transform: rotate(calc(var(--r) + var(--spin))); }
+  }
+
+  @keyframes wobble {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(calc(var(--r) - 7deg)); }
+    50%      { transform: translate3d(var(--dx), var(--dy), 0) rotate(calc(var(--r) + 7deg)); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1) rotate(var(--r)); }
+    50%      { transform: scale(var(--sc, 1.18)) rotate(calc(var(--r) + var(--spin))); }
+  }
+
+  @keyframes orbit {
+    0%   { transform: translate3d(var(--dx), 0, 0) rotate(var(--r)); }
+    25%  { transform: translate3d(0, var(--dy), 0) rotate(calc(var(--r) + 90deg)); }
+    50%  { transform: translate3d(calc(var(--dx) * -1), 0, 0) rotate(calc(var(--r) + 180deg)); }
+    75%  { transform: translate3d(0, calc(var(--dy) * -1), 0) rotate(calc(var(--r) + 270deg)); }
+    100% { transform: translate3d(var(--dx), 0, 0) rotate(calc(var(--r) + 360deg)); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--r)); }
+    20% { transform: translate3d(calc(var(--dx) * .5), calc(var(--dy) * .5), 0) rotate(calc(var(--r) + 2deg)); }
+    40% { transform: translate3d(calc(var(--dx) * -.5), calc(var(--dy) * -.5), 0) rotate(calc(var(--r) - 2deg)); }
+    60% { transform: translate3d(calc(var(--dx) * .5), calc(var(--dy) * .5), 0) rotate(calc(var(--r) + 1deg)); }
+    80% { transform: translate3d(calc(var(--dx) * -.5), calc(var(--dy) * -.5), 0) rotate(calc(var(--r) - 1deg)); }
+  }
+
+  /* ---------- responsive ---------- */
+
+  @media (max-width: 980px) {
+    .hero {
+      justify-content: flex-start;
+      padding: 120px clamp(20px, 5vw, 72px) 46vh;
+      padding-right: clamp(20px, 5vw, 72px);
+    }
+
+    .hero__copy { max-width: 640px; }
+    .headline { font-size: clamp(54px, 12vw, 96px); }
+
+    .panel {
+      top: auto;
+      bottom: 16px;
+      right: 16px;
+      left: 16px;
+      width: auto;
+      max-height: 40svh;
+      transform: none;
+      padding: 16px;
+    }
+
+    .footer { display: none; }
+    .topbar__hint { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .eyebrow { margin-bottom: 14px; }
+    .lede { margin-top: 18px; font-size: 14px; }
+    .actions { margin-top: 22px; }
+    .seedline { margin-top: 18px; }
+    .headline { font-size: clamp(42px, 14vw, 72px); }
+  }
+
+  @media (max-width: 480px) {
+    .topbar__meta { display: none; }
+  }
+
+  @media (max-width: 980px) and (max-height: 720px) {
+    .hero { padding-top: 92px; padding-bottom: 44vh; }
+    .headline { font-size: clamp(38px, 11vw, 56px); }
+    .lede { display: none; }
+    .actions { margin-top: 18px; }
+    .seedline { margin-top: 14px; }
+    .panel { max-height: 38svh; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shape__inner { animation: none !important; }
+    .btn, .toggle__ui, .toggle__ui::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="bg"></div>
+    <div class="ambient" id="ambient" aria-hidden="true"></div>
+    <div class="shapes" id="shapes" aria-hidden="true"></div>
+    <div class="scrim"></div>
+    <div class="grain"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">
+          <span class="mark-dot"></span>
+          <span class="mark-tri"></span>
+          <span class="mark-square"></span>
+        </span>
+        <span class="brand__name">shapy<sup>®</sup></span>
+      </div>
+      <div class="topbar__meta">
+        <span class="pill">v0.1 · sample</span>
+        <span class="topbar__hint">Press <kbd>R</kbd> to remix</span>
+      </div>
+    </header>
+
+    <main class="hero">
+      <div class="hero__copy">
+        <p class="eyebrow"><span class="dot"></span> Infinite · seeded · CSS</p>
+        <h1 class="headline" contenteditable="true" spellcheck="false" data-editable title="Click to edit">Shape your<br><em>story.</em></h1>
+        <p class="lede" contenteditable="true" spellcheck="false" data-editable title="Click to edit">A generative background system for websites, videos, and everything in between. Click the text to make it yours.</p>
+        <div class="actions">
+          <button class="btn btn--primary" id="randomize" type="button">
+            <span>New pattern</span>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M13.5 2.5v4h-4"></path>
+              <path d="M13.5 6.5A6 6 0 1 0 14 9"></path>
+            </svg>
+          </button>
+          <button class="btn btn--ghost" id="copySeed" type="button">Copy seed</button>
+        </div>
+        <div class="seedline">
+          <span class="seedline__label">seed</span>
+          <code id="seedValue">------</code>
+          <span class="seedline__palette" id="paletteDots" aria-hidden="true"></span>
+          <span class="seedline__badge" title="Every generation gets a fresh 128-bit seed">one-of-one</span>
+        </div>
+      </div>
+    </main>
+
+    <aside class="panel" aria-label="Pattern controls">
+      <div class="panel__head">
+        <h2>Controls</h2>
+        <button class="iconbtn" id="pause" type="button" aria-label="Pause animations" aria-pressed="false">
+          <svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <rect x="2" y="1" width="3" height="10" rx="1"></rect>
+            <rect x="7" y="1" width="3" height="10" rx="1"></rect>
+          </svg>
+        </button>
+      </div>
+
+      <div class="field">
+        <label for="palette">Palette</label>
+        <div class="select-wrap">
+          <select id="palette">
+            <option value="midnight">Midnight</option>
+            <option value="sandstone">Sandstone</option>
+            <option value="bauhaus">Bauhaus</option>
+            <option value="forest">Forest</option>
+            <option value="plum">Plum</option>
+            <option value="ocean">Ocean</option>
+            <option value="clay">Clay</option>
+            <option value="mono">Mono</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="shapeSet">Shape set</label>
+        <div class="select-wrap">
+          <select id="shapeSet">
+            <option value="all">All shapes</option>
+            <option value="geometry">Geometry</option>
+            <option value="lines">Lines</option>
+            <option value="organic">Organic</option>
+            <option value="emoji">Emoji</option>
+            <option value="stickers">Stickers</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="layout">Layout</label>
+        <div class="select-wrap">
+          <select id="layout">
+            <option value="auto">Auto / even</option>
+            <option value="scatter">Random scatter</option>
+            <option value="grid">Aligned grid</option>
+            <option value="rows">Horizontal rows</option>
+            <option value="columns">Vertical columns</option>
+            <option value="center">Center cluster</option>
+            <option value="edges">Edge frame</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="align">Alignment</label>
+        <div class="select-wrap">
+          <select id="align">
+            <option value="random">Random / mixed</option>
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+            <option value="top">Top</option>
+            <option value="middle">Middle</option>
+            <option value="bottom">Bottom</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="motion">Motion</label>
+        <div class="select-wrap">
+          <select id="motion">
+            <option value="mixed">Mixed</option>
+            <option value="chaos">Chaos / total random</option>
+            <option value="flow">Flow (exit + respawn)</option>
+            <option value="bounce">Bounce (hit + return)</option>
+            <option value="drift">Drift</option>
+            <option value="spin">Spin</option>
+            <option value="pulse">Pulse</option>
+            <option value="wobble">Wobble</option>
+            <option value="orbit">Orbit</option>
+            <option value="calm">Calm</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="direction">Direction</label>
+        <div class="select-wrap">
+          <select id="direction">
+            <option value="random">Random</option>
+            <option value="lr">Left → right</option>
+            <option value="rl">Right → left</option>
+            <option value="tb">Top → bottom</option>
+            <option value="bt">Bottom → top</option>
+            <option value="dr">Diagonal ↘</option>
+            <option value="dl">Diagonal ↙</option>
+            <option value="ur">Diagonal ↗</option>
+            <option value="ul">Diagonal ↖</option>
+            <option value="alternate">Alternate</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field__row">
+          <label for="density">Density</label>
+          <output id="densityOut" for="density">68%</output>
+        </div>
+        <input type="range" id="density" min="20" max="100" value="68">
+      </div>
+
+      <div class="field">
+        <div class="field__row">
+          <label for="scale">Scale</label>
+          <output id="scaleOut" for="scale">1.0×</output>
+        </div>
+        <input type="range" id="scale" min="60" max="140" value="100">
+      </div>
+
+      <div class="field">
+        <label for="sizeMode">Size mode</label>
+        <div class="select-wrap">
+          <select id="sizeMode">
+            <option value="mixed">Mixed sizes</option>
+            <option value="same">Same size</option>
+            <option value="subtle">Subtle variation</option>
+            <option value="dramatic">Dramatic variation</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field__row">
+          <label for="speed">Motion speed</label>
+          <output id="speedOut" for="speed">1.0×</output>
+        </div>
+        <input type="range" id="speed" min="50" max="200" value="100">
+      </div>
+
+      <div class="field">
+        <div class="field__row">
+          <label for="move">Move intensity</label>
+          <output id="moveOut" for="move">1.0×</output>
+        </div>
+        <input type="range" id="move" min="30" max="200" value="100">
+      </div>
+
+      <div class="field">
+        <label for="customColors">Custom colors (comma hex)</label>
+        <textarea id="customColors" rows="2" placeholder="#ff3b30, #30d158, #0a84ff"></textarea>
+        <small style="opacity:.6">Leave empty for palette.</small>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="safeArea">
+        <span class="toggle__ui"></span>
+        <span>Text safe area</span>
+      </label>
+
+      <div class="panel__foot">
+        <span id="shapeCount">0 shapes</span>
+        <button class="textbtn" id="reset" type="button">Reset</button>
+      </div>
+    </aside>
+
+    <footer class="footer">
+      <span>Shapy sample · CSS-first · zero dependencies</span>
+      <span class="footer__right"><span>Seeded randomness</span> · <span>40 shapes</span></span>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const $ = (sel, root = document) => root.querySelector(sel);
+
+    const app = $('#app');
+    const ambientEl = $('#ambient');
+    const shapesEl = $('#shapes');
+    const heroCopy = $('.hero__copy');
+    const seedValue = $('#seedValue');
+    const shapeCount = $('#shapeCount');
+    const paletteDots = $('#paletteDots');
+    const toastEl = $('#toast');
+    const pauseBtn = $('#pause');
+
+    /* ---------- palettes ---------- */
+
+    const PALETTES = {
+      midnight: {
+        name: 'Midnight', dark: true,
+        bg: '#0A0F1E', ink: '#F8FAFC', muted: '#94A3B8',
+        accent: '#7DD3FC', accentInk: '#06121F',
+        panel: 'rgba(10, 15, 30, .62)', border: 'rgba(148, 163, 184, .18)',
+        scrim: 'rgba(10, 15, 30, .62)', glow: 'rgba(125, 211, 252, .10)',
+        shapes: ['#7DD3FC', '#F472B6', '#FBBF24', '#34D399', '#F8FAFC']
+      },
+      sandstone: {
+        name: 'Sandstone', dark: false,
+        bg: '#F3EDE4', ink: '#1C1917', muted: '#78716C',
+        accent: '#C2410C', accentInk: '#FFF7ED',
+        panel: 'rgba(255, 255, 255, .58)', border: 'rgba(28, 25, 23, .12)',
+        scrim: 'rgba(243, 237, 228, .68)', glow: 'rgba(194, 65, 12, .08)',
+        shapes: ['#1C1917', '#C2410C', '#0F766E', '#D97706', '#A8A29E']
+      },
+      bauhaus: {
+        name: 'Bauhaus', dark: false,
+        bg: '#F5F1E8', ink: '#111827', muted: '#6B7280',
+        accent: '#D62828', accentInk: '#FFF7ED',
+        panel: 'rgba(255, 255, 255, .58)', border: 'rgba(17, 24, 39, .12)',
+        scrim: 'rgba(245, 241, 232, .68)', glow: 'rgba(214, 40, 40, .07)',
+        shapes: ['#D62828', '#003049', '#F77F00', '#FCBF49', '#1D3557']
+      },
+      forest: {
+        name: 'Forest', dark: true,
+        bg: '#0C1A14', ink: '#ECFDF5', muted: '#86A789',
+        accent: '#A3B18A', accentInk: '#10231A',
+        panel: 'rgba(12, 26, 20, .62)', border: 'rgba(163, 177, 138, .18)',
+        scrim: 'rgba(12, 26, 20, .62)', glow: 'rgba(163, 177, 138, .10)',
+        shapes: ['#A3B18A', '#588157', '#D4A373', '#E9EDC9', '#B5838D']
+      },
+      plum: {
+        name: 'Plum', dark: true,
+        bg: '#160B20', ink: '#FDF4FF', muted: '#C4A1D6',
+        accent: '#E879F9', accentInk: '#2A0A35',
+        panel: 'rgba(22, 11, 32, .62)', border: 'rgba(196, 161, 214, .18)',
+        scrim: 'rgba(22, 11, 32, .62)', glow: 'rgba(232, 121, 249, .10)',
+        shapes: ['#E879F9', '#FF8FAB', '#C77DFF', '#FFC6FF', '#F5E6E8']
+      },
+      ocean: {
+        name: 'Ocean', dark: true,
+        bg: '#041C2C', ink: '#E0F2FE', muted: '#7DD3FC',
+        accent: '#22D3EE', accentInk: '#04202E',
+        panel: 'rgba(4, 28, 44, .62)', border: 'rgba(125, 211, 252, .18)',
+        scrim: 'rgba(4, 28, 44, .62)', glow: 'rgba(34, 211, 238, .10)',
+        shapes: ['#22D3EE', '#38BDF8', '#0EA5E9', '#F59E0B', '#E0F2FE']
+      },
+      clay: {
+        name: 'Clay', dark: true,
+        bg: '#231714', ink: '#FAF0E6', muted: '#C4A69A',
+        accent: '#E9C46A', accentInk: '#2B1B16',
+        panel: 'rgba(35, 23, 20, .62)', border: 'rgba(196, 166, 154, .18)',
+        scrim: 'rgba(35, 23, 20, .62)', glow: 'rgba(233, 196, 106, .10)',
+        shapes: ['#E9C46A', '#D98E73', '#A44A3F', '#6B9080', '#F4E1D2']
+      },
+      mono: {
+        name: 'Mono', dark: true,
+        bg: '#0A0A0A', ink: '#FAFAFA', muted: '#A3A3A3',
+        accent: '#FAFAFA', accentInk: '#111111',
+        panel: 'rgba(10, 10, 10, .62)', border: 'rgba(250, 250, 250, .16)',
+        scrim: 'rgba(10, 10, 10, .65)', glow: 'rgba(250, 250, 250, .06)',
+        shapes: ['#FAFAFA', '#A3A3A3', '#525252', '#E5E5E5']
+      }
+    };
+
+    /* ---------- shape geometry helpers ---------- */
+
+    function polygon(n, rotation = -90) {
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const a = (rotation + (i * 360) / n) * Math.PI / 180;
+        pts.push(`${(50 + 50 * Math.cos(a)).toFixed(2)}% ${(50 + 50 * Math.sin(a)).toFixed(2)}%`);
+      }
+      return `polygon(${pts.join(',')})`;
+    }
+
+    function starPolygon(n, inner = 0.44, rotation = -90) {
+      const pts = [];
+      for (let i = 0; i < n * 2; i++) {
+        const r = i % 2 === 0 ? 50 : 50 * inner;
+        const a = (rotation + (i * 180) / n) * Math.PI / 180;
+        pts.push(`${(50 + r * Math.cos(a)).toFixed(2)}% ${(50 + r * Math.sin(a)).toFixed(2)}%`);
+      }
+      return `polygon(${pts.join(',')})`;
+    }
+
+    /* ---------- shape catalogue: 40 shapes ---------- */
+
+    const SHAPE_DEFS = {
+      circle: { group: 'geometry', weight: 2, ratio: [1, 1], style: () => ({ borderRadius: '50%' }) },
+      ring: { group: 'geometry', weight: 1, ratio: [1, 1], style: (s) => ({ borderRadius: '50%', background: 'transparent', border: `${Math.max(1.5, s * 0.07).toFixed(1)}px solid var(--c)` }) },
+      dot: { group: 'geometry', weight: 1, ratio: [1, 1], size: 0.45, style: () => ({ borderRadius: '50%' }) },
+      square: { group: 'geometry', weight: 2, ratio: [1, 1], style: () => ({ borderRadius: '2px' }) },
+      squircle: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ borderRadius: '28%' }) },
+      rectH: { group: 'geometry', weight: 1, ratio: [1.7, 1], style: () => ({ borderRadius: '3px' }) },
+      rectV: { group: 'geometry', weight: 1, ratio: [1, 1.7], style: () => ({ borderRadius: '3px' }) },
+      triangleUp: { group: 'geometry', weight: 2, ratio: [1, 0.9], style: () => ({ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }) },
+      triangleDown: { group: 'geometry', weight: 1, ratio: [1, 0.9], style: () => ({ clipPath: 'polygon(0% 0%, 100% 0%, 50% 100%)' }) },
+      triangleLeft: { group: 'geometry', weight: 1, ratio: [0.9, 1], style: () => ({ clipPath: 'polygon(100% 0%, 100% 100%, 0% 50%)' }) },
+      triangleRight: { group: 'geometry', weight: 1, ratio: [0.9, 1], style: () => ({ clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)' }) },
+      diamond: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }) },
+      pentagon: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: polygon(5) }) },
+      hexagon: { group: 'geometry', weight: 2, ratio: [1, 0.9], style: () => ({ clipPath: polygon(6) }) },
+      heptagon: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: polygon(7) }) },
+      octagon: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: polygon(8) }) },
+      nonagon: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: polygon(9) }) },
+      decagon: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: polygon(10) }) },
+      star4: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: starPolygon(4, 0.38) }) },
+      star5: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: starPolygon(5, 0.42) }) },
+      star6: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: starPolygon(6, 0.52) }) },
+      star8: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: starPolygon(8, 0.58) }) },
+      cross: { group: 'geometry', weight: 1, ratio: [1, 1], style: () => ({ clipPath: 'polygon(35% 0%, 65% 0%, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0% 65%, 0% 35%, 35% 35%)' }) },
+      trapezoid: { group: 'geometry', weight: 1, ratio: [1, 0.8], style: () => ({ clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)' }) },
+      parallelogram: { group: 'geometry', weight: 1, ratio: [1, 0.8], style: () => ({ clipPath: 'polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)' }) },
+      kite: { group: 'geometry', weight: 1, ratio: [1, 1.1], style: () => ({ clipPath: 'polygon(50% 0%, 100% 40%, 50% 100%, 0% 40%)' }) },
+      semicircle: { group: 'geometry', weight: 1, ratio: [1, 0.55], upright: true, style: () => ({ borderRadius: '999px 999px 0 0' }) },
+      quarter: { group: 'geometry', weight: 1, ratio: [1, 1], upright: true, style: () => ({ borderRadius: '100% 0 0 0' }) },
+      pill: { group: 'geometry', weight: 1, ratio: [1.8, 0.7], style: () => ({ borderRadius: '999px' }) },
+      arch: { group: 'geometry', weight: 1, ratio: [0.75, 1], upright: true, style: () => ({ borderRadius: '999px 999px 0 0' }) },
+      chevron: { group: 'geometry', weight: 1, ratio: [1, 0.9], style: () => ({ clipPath: 'polygon(0% 0%, 50% 35%, 100% 0%, 100% 55%, 50% 90%, 0% 55%)' }) },
+      arrow: { group: 'geometry', weight: 1, ratio: [1.2, 0.8], style: () => ({ clipPath: 'polygon(0% 30%, 62% 30%, 62% 0%, 100% 50%, 62% 100%, 62% 70%, 0% 70%)' }) },
+      lineV: { group: 'lines', weight: 2, ratio: [0.06, 1], upright: true, style: () => ({ borderRadius: '999px' }) },
+      lineH: { group: 'lines', weight: 2, ratio: [1, 0.06], upright: true, style: () => ({ borderRadius: '999px' }) },
+      lineD: { group: 'lines', weight: 2, ratio: [1, 0.06], upright: true, baseRot: 45, style: () => ({ borderRadius: '999px' }) },
+      blob: { group: 'organic', weight: 2, ratio: [1, 1], style: (s, rand) => { const r = () => 30 + Math.round(rand() * 40); return { borderRadius: `${r()}% ${r()}% ${r()}% ${r()}% / ${r()}% ${r()}% ${r()}% ${r()}%` }; } },
+      crescent: { group: 'organic', weight: 1, ratio: [1, 1], style: () => ({ borderRadius: '50%', maskImage: 'radial-gradient(circle at 68% 50%, transparent 0 40%, #000 41%)', WebkitMaskImage: 'radial-gradient(circle at 68% 50%, transparent 0 40%, #000 41%)' }) },
+      petal: { group: 'organic', weight: 1, ratio: [1, 1], style: () => ({ borderRadius: '50% 0 50% 0' }) },
+      leaf: { group: 'organic', weight: 1, ratio: [1, 1], style: () => ({ borderRadius: '0 100% 0 100%' }) },
+      drop: { group: 'organic', weight: 1, ratio: [0.8, 1], upright: true, baseRot: 45, style: () => ({ borderRadius: '50% 50% 50% 0' }) }
+    };
+
+    const MOTION_WEIGHTS = [['float', 4], ['drift', 3], ['flow', 1], ['bounce', 2], ['wobble', 2], ['pulse', 2], ['spin', 1], ['orbit', 1], ['shake', 1]];
+
+    /* ---------- seeded randomness ---------- */
+
+    function xmur3(str) {
+      let h = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      return function () {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+      };
+    }
+
+    function sfc32(a, b, c, d) {
+      return function () {
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+        let t = (a + b) | 0;
+        a = b ^ (b >>> 9);
+        b = (c + (c << 3)) | 0;
+        c = (c << 21) | (c >>> 11);
+        d = (d + 1) | 0;
+        t = (t + d) | 0;
+        c = (c + t) | 0;
+        return (t >>> 0) / 4294967296;
+      };
+    }
+
+    function makeRng(seed) {
+      const str = String(seed);
+      return sfc32(
+        xmur3(`${str}|0`)(),
+        xmur3(`${str}|1`)(),
+        xmur3(`${str}|2`)(),
+        xmur3(`${str}|3`)()
+      );
+    }
+
+    function randomSeed() {
+      const bytes = new Uint8Array(16);
+      if (globalThis.crypto && typeof globalThis.crypto.getRandomValues === 'function') {
+        globalThis.crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    function shortSeed(seed) {
+      return String(seed).slice(0, 10).toUpperCase();
+    }
+
+    function readSeed() {
+      const params = new URLSearchParams(location.search);
+      const raw = (params.get('seed') || '').trim();
+      return raw ? decodeURIComponent(raw).slice(0, 64) : '';
+    }
+
+    function weightedPick(items, rand) {
+      const total = items.reduce((sum, item) => sum + item[1], 0);
+      let r = rand() * total;
+      for (const item of items) {
+        r -= item[1];
+        if (r <= 0) return item[0];
+      }
+      return items[0][0];
+    }
+
+    /* ---------- state ---------- */
+
+    const defaults = {
+      palette: 'midnight',
+      shapeSet: 'all',
+      layout: 'auto',
+      align: 'random',
+      motion: 'mixed',
+      direction: 'random',
+      density: 68,
+      scale: 100,
+      sizeMode: 'mixed',
+      speed: 100,
+      move: 100,
+      customColors: '',
+      safeArea: false,
+      paused: false,
+      shapes: [],
+      registry: null
+    };
+
+    const state = Object.assign({}, defaults, window.__SHAPY_STATE__ || {}, { seed: (window.__SHAPY_STATE__ && window.__SHAPY_STATE__.seed) || readSeed() || randomSeed() });
+
+    const randomizeBtn = $('#randomize');
+    const copyBtn = $('#copySeed');
+    const resetBtn = $('#reset');
+
+    const controls = {
+      palette: $('#palette'),
+      shapeSet: $('#shapeSet'),
+      layout: $('#layout'),
+      align: $('#align'),
+      motion: $('#motion'),
+      direction: $('#direction'),
+      density: $('#density'),
+      scale: $('#scale'),
+      sizeMode: $('#sizeMode'),
+      speed: $('#speed'),
+      move: $('#move'),
+      customColors: $('#customColors'),
+      safeArea: $('#safeArea'),
+      densityOut: $('#densityOut'),
+      scaleOut: $('#scaleOut'),
+      speedOut: $('#speedOut'),
+      moveOut: $('#moveOut')
+    };
+
+    const PAUSE_SVG = '<svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><rect x="2" y="1" width="3" height="10" rx="1"></rect><rect x="7" y="1" width="3" height="10" rx="1"></rect></svg>';
+    const PLAY_SVG = '<svg viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><path d="M3 1.5v9l7-4.5-7-4.5z"></path></svg>';
+
+    /* ---------- palette application ---------- */
+
+    function applyPalette() {
+      const p = PALETTES[state.palette] || PALETTES.midnight;
+      const vars = {
+        '--bg': p.bg,
+        '--ink': p.ink,
+        '--muted': p.muted,
+        '--accent': p.accent,
+        '--accent-ink': p.accentInk,
+        '--panel': p.panel,
+        '--border': p.border,
+        '--scrim': p.scrim,
+        '--glow': p.glow
+      };
+      for (const [key, value] of Object.entries(vars)) app.style.setProperty(key, value);
+      app.style.colorScheme = p.dark ? 'dark' : 'light';
+      paletteDots.innerHTML = p.shapes.map((color) => `<span class="palette-dot" style="background:${color}"></span>`).join('');
+    }
+
+    window.ShapyRegistry = window.ShapyRegistry || {};
+    const EMOJI_POOL = ['⭐','✨','❄️','🔥','💧','🌙','☀️','⚡','🌈','🎈','🎨','🎯','🌀','💫','🔮','🧩','🎲','🍀','🌸','🍄','🪐','🌪️','❤️','💙','💚','💛','💜','🖤','🤍'];
+
+    /* ---------- shape selection + motion ---------- */
+
+    function getPool() {
+      const registry = window.ShapyRegistry;
+      if (state.shapeSet === 'custom') {
+        const wanted = new Set(Array.isArray(state.shapes) ? state.shapes : []);
+        const all = getAllEntries();
+        const picked = all.filter(([key]) => wanted.has(key));
+        // Empty/invalid selection falls back to every shape instead of breaking the renderer.
+        return picked.length ? picked : all;
+      }
+      const injected = registryEntries(state.shapeSet);
+      if (injected) return injected;
+      if (registry[state.shapeSet] && registry[state.shapeSet].getPool) {
+        return registry[state.shapeSet].getPool();
+      }
+      if (state.shapeSet === 'emoji') {
+        return EMOJI_POOL.map((e, i) => [`emoji-${i}`, { weight: 1, size: 1, ratio: [1,1], emoji: e, style: () => ({}) }]);
+      }
+      const entries = Object.entries(SHAPE_DEFS);
+      if (state.shapeSet === 'all') return getAllEntries();
+      const filtered = entries.filter(([, def]) => def.group === state.shapeSet);
+      // Graceful fallback: missing optional sticker/emoji pack should not break the background.
+      return filtered.length ? filtered : getAllEntries();
+    }
+
+    function registryEntries(groupId) {
+      const group = state.registry && state.registry[groupId];
+      if (!group) return null;
+      const items = Array.isArray(group) ? group : group.items;
+      if (!Array.isArray(items) || !items.length) return null;
+      return items.map((item, i) => [
+        item.key || `${groupId}-${i}`,
+        Object.assign({ group: groupId, weight: 1, size: 1, ratio: [1, 1] }, item, { style: () => ({}) })
+      ]);
+    }
+
+    function getAllEntries() {
+      const entries = Object.entries(SHAPE_DEFS);
+      const emojiEntries = EMOJI_POOL.map((e, i) => [
+        `emoji-${i}`,
+        { group: 'emoji', weight: 0.75, size: 0.9, ratio: [1, 1], emoji: e, style: () => ({}) }
+      ]);
+      const extra = [];
+      if (state.registry) {
+        for (const groupId of Object.keys(state.registry)) {
+          const groupEntries = registryEntries(groupId);
+          if (groupEntries) extra.push(...groupEntries);
+        }
+      }
+      return [...entries, ...emojiEntries, ...extra];
+    }
+
+    function getCount() {
+      const d = state.density / 100;
+      const base = 55 + d * 125;
+      return Math.round(base * (window.innerWidth < 700 ? 0.62 : 1));
+    }
+
+    function getGrid(count) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const cols = Math.max(5, Math.round(Math.sqrt(count * (vw / vh))));
+      const rows = Math.max(4, Math.ceil(count / cols));
+      return { cols, rows };
+    }
+
+    function buildPositions(cols, rows, layout, rand) {
+      const cells = [];
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          cells.push({
+            x: ((col + 0.5) / cols) * 100,
+            y: ((row + 0.5) / rows) * 100
+          });
+        }
+      }
+
+      for (let i = cells.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        const tmp = cells[i];
+        cells[i] = cells[j];
+        cells[j] = tmp;
+      }
+
+      const cellW = 100 / cols;
+      const cellH = 100 / rows;
+      const jitter = layout === 'grid' ? 0.12 : (layout === 'rows' || layout === 'columns') ? 0.16 : 0.42;
+
+      const positions = cells.map((cell) => {
+        let x = cell.x + (rand() - 0.5) * cellW * jitter * 2;
+        let y = cell.y + (rand() - 0.5) * cellH * jitter * 2;
+
+        if (layout === 'rows') y = cell.y;
+        if (layout === 'columns') x = cell.x;
+
+        if (layout === 'center') {
+          x = 50 + (x - 50) * 0.55;
+          y = 50 + (y - 50) * 0.55;
+        }
+
+        if (layout === 'edges') {
+          x = 50 + (x - 50) * 1.18;
+          y = 50 + (y - 50) * 1.18;
+        }
+
+        return {
+          x: Math.max(3, Math.min(97, x)),
+          y: Math.max(3, Math.min(97, y))
+        };
+      });
+
+      return applyAlign(positions, state.align);
+    }
+
+    function applyAlign(positions, align) {
+      switch (align) {
+        case 'left':
+          return positions.map((p) => ({ x: 4 + p.x * 0.72, y: p.y }));
+        case 'right':
+          return positions.map((p) => ({ x: 96 - (100 - p.x) * 0.72, y: p.y }));
+        case 'center':
+          return positions.map((p) => ({ x: 50 + (p.x - 50) * 0.62, y: p.y }));
+        case 'top':
+          return positions.map((p) => ({ x: p.x, y: 4 + p.y * 0.72 }));
+        case 'bottom':
+          return positions.map((p) => ({ x: p.x, y: 96 - (100 - p.y) * 0.72 }));
+        case 'middle':
+          return positions.map((p) => ({ x: p.x, y: 50 + (p.y - 50) * 0.62 }));
+        default:
+          return positions;
+      }
+    }
+
+    function pickShape(pool, rand, last, weightMap) {
+      const total = pool.reduce((sum, [key]) => sum + (weightMap.get(key) || 1), 0);
+      let r = rand() * total;
+      let index = 0;
+      for (let i = 0; i < pool.length; i++) {
+        r -= weightMap.get(pool[i][0]) || 1;
+        if (r <= 0) { index = i; break; }
+      }
+      if (pool.length > 1 && pool[index][0] === last) index = (index + 1) % pool.length;
+      return pool[index];
+    }
+
+    function directionVector(rand, index) {
+      const vectors = {
+        lr: { x: 1, y: 0 },
+        rl: { x: -1, y: 0 },
+        tb: { x: 0, y: 1 },
+        bt: { x: 0, y: -1 },
+        dr: { x: 1, y: 1 },
+        dl: { x: -1, y: 1 },
+        ur: { x: 1, y: -1 },
+        ul: { x: -1, y: -1 }
+      };
+
+      let mode = state.direction;
+      if (mode === 'random') {
+        const keys = Object.keys(vectors);
+        mode = keys[Math.floor(rand() * keys.length)];
+      } else if (mode === 'alternate') {
+        mode = index % 2 === 0 ? 'lr' : 'rl';
+      }
+
+      return vectors[mode] || vectors.lr;
+    }
+
+    function motionFor(rand, index) {
+      let anim = state.motion;
+      if (anim === 'mixed') anim = weightedPick(MOTION_WEIGHTS, rand);
+      if (anim === 'chaos') anim = weightedPick([['float', 3], ['drift', 2], ['flow', 2], ['bounce', 2], ['spin', 1], ['wobble', 1], ['pulse', 1], ['orbit', 1]], rand);
+
+      const dir = directionVector(rand, index);
+      const dirLength = Math.hypot(dir.x, dir.y) || 1;
+      const sign = dir.x !== 0 ? Math.sign(dir.x) : (dir.y !== 0 ? Math.sign(dir.y) : 1);
+      const moveScale = state.move / 100;
+      const dist = (8 + rand() * 28) * moveScale;
+      let dx = (dir.x / dirLength) * dist;
+      let dy = (dir.y / dirLength) * dist;
+
+      let dur, delay;
+      let ease = 'ease-in-out';
+      let adir = 'alternate';
+      let sc = 1.03;
+      let spin = (rand() - 0.5) * 16;
+      let iterations = 'infinite';
+
+      switch (anim) {
+        case 'bounce':
+          dur = 8 + rand() * 14;
+          delay = -rand() * dur;
+          ease = 'ease-in-out';
+          adir = 'alternate';
+          dx = (dir.x / dirLength) * (20 + rand() * 60);
+          dy = (dir.y / dirLength) * (20 + rand() * 60);
+          spin = (rand() - 0.5) * 24;
+          sc = 1;
+          iterations = 'infinite';
+          break;
+        case 'flow':
+          dur = 18 + rand() * 22;
+          delay = -rand() * dur;
+          ease = 'linear';
+          adir = 'normal';
+          dx = `${dir.x * 100}vw`;
+          dy = `${dir.y * 100}vh`;
+          spin = (rand() - 0.5) * 40;
+          sc = 1;
+          iterations = 'infinite';
+          break;
+        case 'spin':
+          dur = 18 + rand() * 30;
+          delay = -rand() * dur;
+          ease = 'linear';
+          adir = 'normal';
+          spin = 360 * sign;
+          dx = 0;
+          dy = 0;
+          sc = 1;
+          break;
+        case 'orbit':
+          dur = 20 + rand() * 26;
+          delay = -rand() * dur;
+          ease = 'linear';
+          adir = 'normal';
+          dx = 10 + rand() * 26;
+          dy = 10 + rand() * 26;
+          spin = 360 * sign;
+          sc = 1;
+          break;
+        case 'pulse':
+          dur = 6 + rand() * 12;
+          delay = -rand() * dur;
+          sc = 1.08 + rand() * 0.22;
+          dx = 0;
+          dy = 0;
+          spin = (rand() - 0.5) * 20;
+          break;
+        case 'wobble':
+          dur = 6 + rand() * 10;
+          delay = -rand() * dur;
+          dx = (rand() - 0.5) * 16;
+          dy = (rand() - 0.5) * 16;
+          spin = (rand() - 0.5) * 20;
+          sc = 1.02;
+          break;
+        case 'shake':
+          dur = 2.5 + rand() * 4;
+          delay = -rand() * dur;
+          dx = (rand() - 0.5) * 8;
+          dy = (rand() - 0.5) * 8;
+          spin = (rand() - 0.5) * 6;
+          sc = 1;
+          break;
+        case 'drift':
+          dur = 14 + rand() * 18;
+          delay = -rand() * dur;
+          spin = (rand() - 0.5) * 12;
+          sc = 1.03;
+          break;
+        case 'calm':
+          anim = 'float';
+          dur = 24 + rand() * 24;
+          delay = -rand() * dur;
+          dx *= 0.3;
+          dy *= 0.3;
+          spin = (rand() - 0.5) * 8;
+          sc = 1.02;
+          break;
+        case 'float':
+        default:
+          anim = 'float';
+          dur = 12 + rand() * 18;
+          delay = -rand() * dur;
+          dx *= 0.6;
+          dy *= 0.6;
+          spin = (rand() - 0.5) * 16;
+          sc = 1.02 + rand() * 0.06;
+          break;
+      }
+
+      const speed = state.speed / 100;
+      dur /= speed;
+      delay /= speed;
+
+      return {
+        anim,
+        dur: `${dur.toFixed(2)}s`,
+        delay: `${delay.toFixed(2)}s`,
+        dx: typeof dx === 'number' ? `${dx.toFixed(2)}px` : dx,
+        dy: typeof dy === 'number' ? `${dy.toFixed(2)}px` : dy,
+        spin: `${spin.toFixed(2)}deg`,
+        sc: sc.toFixed(3),
+        ease,
+        adir,
+        iterations
+      };
+    }
+
+    function createShape(kind, def, size, x, y, color, opacity, rotation, motion, rand) {
+      const ratio = def.ratio || [1, 1];
+      let width = size * ratio[0];
+      let height = size * ratio[1];
+      if (kind === 'lineV') width = Math.max(1.5, width);
+      if (kind === 'lineH' || kind === 'lineD') height = Math.max(1.5, height);
+
+      const id = Math.random().toString(36).slice(2, 10);
+      const el = document.createElement('div');
+      el.className = 'shape';
+      el.dataset.id = id;
+      el.style.setProperty('--x', `${x.toFixed(2)}%`);
+      el.style.setProperty('--y', `${y.toFixed(2)}%`);
+      el.style.setProperty('--w', `${width.toFixed(2)}px`);
+      el.style.setProperty('--h', `${height.toFixed(2)}px`);
+
+      const inner = document.createElement('span');
+      inner.className = 'shape__inner';
+      inner.dataset.id = id;
+      if (def.emoji) {
+        inner.textContent = def.emoji;
+        inner.style.fontSize = `${size * 0.8}px`;
+        inner.style.lineHeight = '1';
+        inner.style.display = 'grid';
+        inner.style.placeItems = 'center';
+        inner.style.background = 'transparent';
+        inner.style.color = 'currentColor';
+      } else if (def.image) {
+        inner.style.display = 'grid';
+        inner.style.placeItems = 'center';
+        inner.style.background = 'transparent';
+        const img = document.createElement('img');
+        img.src = def.image;
+        img.alt = def.label || '';
+        img.draggable = false;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'contain';
+        inner.appendChild(img);
+      } else {
+        inner.style.setProperty('--c', color);
+      }
+      inner.style.setProperty('--o', opacity.toFixed(3));
+      inner.style.setProperty('--r', `${rotation.toFixed(2)}deg`);
+      inner.style.setProperty('--anim', motion.anim);
+      inner.style.setProperty('--dur', motion.dur);
+      inner.style.setProperty('--delay', motion.delay);
+      inner.style.setProperty('--dx', motion.dx);
+      inner.style.setProperty('--dy', motion.dy);
+      inner.style.setProperty('--spin', motion.spin);
+      inner.style.setProperty('--sc', motion.sc);
+      inner.style.setProperty('--ease', motion.ease);
+      inner.style.setProperty('--adir', motion.adir);
+      inner.style.setProperty('--iterations', motion.iterations || 'infinite');
+      if (!def.emoji && !def.image) {
+        Object.assign(inner.style, def.style(size, rand));
+      }
+      el.appendChild(inner);
+      return el;
+    }
+
+    /* ---------- render ---------- */
+
+    function render() {
+      const palette = PALETTES[state.palette] || PALETTES.midnight;
+      const rand = makeRng(`${state.seed}|${state.shapeSet}|${state.density}|${state.scale}`);
+      const arand = makeRng(`${state.seed}|ambient`);
+      const pool = getPool();
+      const countRand = makeRng(`${state.seed}|count`);
+      const count = Math.max(24, Math.round(getCount() * (0.86 + countRand() * 0.28)));
+      const { cols, rows } = getGrid(count);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const cell = Math.min(vw / cols, vh / rows);
+      const isMobile = vw < 700;
+      const scaleFactor = state.scale / 110;
+      const maxShape = Math.min(
+        cell * (isMobile ? 0.72 : 1.0),
+        vw * (isMobile ? 0.09 : 0.055),
+        vh * (isMobile ? 0.06 : 0.1),
+        isMobile ? 56 : 110
+      ) * scaleFactor;
+      const ambientMax = Math.min(
+        maxShape * 1.35,
+        Math.min(vw, vh) * (isMobile ? 0.16 : 0.18),
+        isMobile ? 64 : 120
+      );
+      let safeRect = state.safeArea ? heroCopy.getBoundingClientRect() : null;
+      if (safeRect && (!safeRect.width || !safeRect.height)) {
+        safeRect = { left: vw * 0.08, right: vw * 0.62, top: vh * 0.2, bottom: vh * 0.8 };
+      }
+
+      const layoutRand = makeRng(`${state.seed}|layout`);
+      const layout = state.layout === 'auto'
+        ? (layoutRand() < 0.5 ? 'scatter' : 'grid')
+        : state.layout;
+
+      const weightMap = new Map();
+      for (const [key, def] of pool) {
+        let weight = (def.weight || 1) * (0.35 + rand() * 2.1);
+        if (pool.length > 6 && rand() < 0.3) weight = 0;
+        weightMap.set(key, weight);
+      }
+
+      let colorPool;
+      if (state.customColors && state.customColors.trim()) {
+        colorPool = state.customColors.split(',').map(s => s.trim()).filter(Boolean);
+      } else {
+        colorPool = [...palette.shapes];
+      }
+      for (let i = colorPool.length - 1; i > 0; i--) {
+        const j = Math.floor(rand() * (i + 1));
+        const tmp = colorPool[i];
+        colorPool[i] = colorPool[j];
+        colorPool[j] = tmp;
+      }
+      if (!state.customColors || !state.customColors.trim()) {
+        colorPool.length = 2 + Math.floor(rand() * (colorPool.length - 1));
+      }
+
+      const positions = buildPositions(cols, rows, layout, rand);
+
+      shapesEl.replaceChildren();
+      ambientEl.replaceChildren();
+
+      const ambientFrag = document.createDocumentFragment();
+      const ambientPool = pool.filter(([, def]) => !def.emoji && !def.image);
+      const ambientSource = ambientPool.length ? ambientPool : (pool.length ? pool : Object.entries(SHAPE_DEFS));
+      const ambientCount = vw < 700 ? 3 : 6;
+      const ambientCols = 3;
+      const ambientRows = Math.ceil(ambientCount / ambientCols);
+
+      for (let i = 0; i < ambientCount; i++) {
+        const [kind, def] = ambientSource[Math.floor(arand() * ambientSource.length)];
+        const ratioMax = Math.max(...(def.ratio || [1, 1]));
+        const size = Math.min(
+          Math.min(vw, vh) * (0.08 + arand() * 0.14) * (state.scale / 100),
+          ambientMax / ratioMax
+        );
+        const color = colorPool[Math.floor(arand() * colorPool.length)];
+        const opacity = 0.05 + arand() * 0.07;
+        const rotation = arand() * 360;
+        const x = ((i % ambientCols) + 0.5) / ambientCols * 100 + (arand() - 0.5) * 12;
+        const y = (Math.floor(i / ambientCols) + 0.5) / ambientRows * 100 + (arand() - 0.5) * 12;
+        const motion = {
+          anim: 'float',
+          dur: `${(30 + arand() * 30).toFixed(1)}s`,
+          delay: `${(-arand() * 30).toFixed(1)}s`,
+          dx: `${((arand() - 0.5) * 36).toFixed(1)}px`,
+          dy: `${((arand() - 0.5) * 36).toFixed(1)}px`,
+          spin: `${((arand() - 0.5) * 18).toFixed(1)}deg`,
+          sc: '1.02',
+          ease: 'ease-in-out',
+          adir: 'alternate'
+        };
+        ambientFrag.appendChild(createShape(kind, def, size, x, y, color, opacity, rotation, motion, arand));
+      }
+      ambientEl.appendChild(ambientFrag);
+
+      const frag = document.createDocumentFragment();
+      const recent = [];
+      let last = '';
+
+      for (let index = 0; index < positions.length; index++) {
+        const { x, y } = positions[index];
+
+        let picked = pickShape(pool, rand, last, weightMap);
+        let attempts = 0;
+        while (pool.length > 4 && recent.includes(picked[0]) && attempts < 3) {
+          picked = pickShape(pool, rand, last, weightMap);
+          attempts++;
+        }
+
+        const kind = picked[0];
+        const def = picked[1];
+        last = kind;
+        recent.push(kind);
+        if (recent.length > 3) recent.shift();
+
+        const ratioMax = Math.max(...(def.ratio || [1, 1]));
+        const sizeScale = state.scale / 100;
+        const shapeScale = state.sizeMode === 'same' ? 1 : (def.size || 1);
+        let sizeFactor;
+        switch (state.sizeMode) {
+          case 'same': sizeFactor = 0.5; break;
+          case 'subtle': sizeFactor = 0.34 + rand() * 0.32; break;
+          case 'dramatic': sizeFactor = 0.1 + Math.pow(rand(), 0.7) * 1.0; break;
+          case 'small': sizeFactor = 0.1 + rand() * 0.2; break;
+          case 'medium': sizeFactor = 0.3 + rand() * 0.28; break;
+          case 'large': sizeFactor = 0.55 + rand() * 0.38; break;
+          default: sizeFactor = 0.12 + Math.pow(rand(), 2.0) * 0.92;
+        }
+        let size = cell * sizeFactor * sizeScale * shapeScale;
+        if (state.sizeMode === 'mixed' && rand() < 0.03) size *= 1.25 + rand() * 0.35;
+        size = Math.max(4, Math.min(size, maxShape / ratioMax));
+
+        const color = colorPool[Math.floor(rand() * colorPool.length)];
+        let opacity = 0.18 + rand() * 0.62;
+        if (kind === 'lineV' || kind === 'lineH' || kind === 'lineD') opacity = Math.max(opacity, 0.35);
+
+        if (safeRect) {
+          const px = (x / 100) * vw;
+          const py = (y / 100) * vh;
+          if (px > safeRect.left - 36 && px < safeRect.right + 36 && py > safeRect.top - 36 && py < safeRect.bottom + 36) {
+            opacity *= 0.35;
+          }
+        }
+
+        let rotation;
+        if (def.upright) {
+          rotation = (def.baseRot || 0) + (rand() - 0.5) * 14;
+        } else {
+          rotation = rand() * 360;
+        }
+
+        const motion = motionFor(rand, index);
+        frag.appendChild(createShape(kind, def, size, x, y, color, opacity, rotation, motion, rand));
+      }
+
+      shapesEl.appendChild(frag);
+      shapeCount.textContent = `${shapesEl.childElementCount + ambientEl.childElementCount} shapes · ${layout}`;
+      setSeedDisplay();
+      startLiveUpdates();
+    }
+
+    /* ---------- UI helpers ---------- */
+
+    let renderRaf = 0;
+    function scheduleRender() {
+      cancelAnimationFrame(renderRaf);
+      renderRaf = requestAnimationFrame(render);
+    }
+
+    let liveTimer = null;
+    function startLiveUpdates() {
+      if (liveTimer) clearInterval(liveTimer);
+      liveTimer = setInterval(() => {
+        if (state.paused) return;
+        const inners = shapesEl.querySelectorAll('.shape__inner');
+        if (!inners.length) return;
+        const rng = makeRng(`${state.seed}|live|${Date.now()}`);
+        const count = Math.max(1, Math.floor(inners.length * 0.12));
+        for (let i = 0; i < count; i++) {
+          const el = inners[Math.floor(rng() * inners.length)];
+          if (!el) continue;
+          const rand = makeRng(`${state.seed}|liveShape|${el.dataset.id || i}|${Date.now()}`);
+          // optional direction flip / pause simulation
+          if (rand() < 0.15) {
+            // stop/start simulation
+            const shouldPause = rand() < 0.5;
+            el.style.animationPlayState = shouldPause ? 'paused' : 'running';
+          }
+          if (rand() < 0.25) {
+            // random re-trigger animation with new values
+            const newHue = Math.floor(rand() * 360);
+            el.style.setProperty('--c', `hsl(${newHue}, 70%, 65%)`);
+            el.style.setProperty('--o', (0.2 + rand() * 0.5).toFixed(3));
+            el.style.animation = 'none';
+            // force reflow
+            void el.offsetWidth;
+            // restart with new delay
+            el.style.animationDelay = `-${rand() * 5}s`;
+            el.style.animation = '';
+          }
+          // occasional direction flip simulation via changing dx sign
+          if (rand() < 0.1) {
+            const currentDx = getComputedStyle(el).getPropertyValue('--dx');
+            // just nudge opacity for visual change
+            el.style.setProperty('--o', (0.1 + rand() * 0.8).toFixed(3));
+          }
+        }
+      }, 6000 + Math.random() * 4000);
+    }
+
+    function syncControls() {
+      controls.palette.value = state.palette;
+      controls.shapeSet.value = state.shapeSet;
+      controls.layout.value = state.layout;
+      controls.align.value = state.align;
+      controls.motion.value = state.motion;
+      controls.direction.value = state.direction;
+      controls.density.value = state.density;
+      controls.scale.value = state.scale;
+      controls.sizeMode.value = state.sizeMode;
+      controls.speed.value = state.speed;
+      controls.move.value = state.move;
+      controls.safeArea.checked = state.safeArea;
+      controls.densityOut.textContent = `${state.density}%`;
+      controls.scaleOut.textContent = `${(state.scale / 100).toFixed(1)}×`;
+      controls.speedOut.textContent = `${(state.speed / 100).toFixed(1)}×`;
+      controls.moveOut.textContent = `${(state.move / 100).toFixed(1)}×`;
+    }
+
+    function syncPause() {
+      app.classList.toggle('is-paused', state.paused);
+      pauseBtn.setAttribute('aria-pressed', String(state.paused));
+      pauseBtn.setAttribute('aria-label', state.paused ? 'Play animations' : 'Pause animations');
+      pauseBtn.innerHTML = state.paused ? PLAY_SVG : PAUSE_SVG;
+    }
+
+    let toastTimer = 0;
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add('is-visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('is-visible'), 1800);
+    }
+
+    function setSeedDisplay() {
+      seedValue.textContent = shortSeed(state.seed);
+      seedValue.title = state.seed;
+      seedValue.setAttribute('aria-label', `Full seed: ${state.seed}`);
+    }
+
+    function updateSeed(seed) {
+      state.seed = seed;
+      setSeedDisplay();
+    }
+
+    async function copySeed() {
+      const text = state.seed;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        try { document.execCommand('copy'); } catch (ignored) {}
+        area.remove();
+      }
+      showToast('Full seed copied');
+    }
+
+    /* ---------- events ---------- */
+
+    controls.palette.addEventListener('change', (event) => {
+      state.palette = event.target.value;
+      applyPalette();
+      render();
+    });
+
+    controls.shapeSet.addEventListener('change', (event) => {
+      state.shapeSet = event.target.value;
+      scheduleRender();
+    });
+
+    controls.layout.addEventListener('change', (event) => {
+      state.layout = event.target.value;
+      scheduleRender();
+    });
+
+    controls.align.addEventListener('change', (event) => {
+      state.align = event.target.value;
+      scheduleRender();
+    });
+
+    controls.sizeMode.addEventListener('change', (event) => {
+      state.sizeMode = event.target.value;
+      scheduleRender();
+    });
+
+    controls.motion.addEventListener('change', (event) => {
+      state.motion = event.target.value;
+      scheduleRender();
+    });
+
+    controls.direction.addEventListener('change', (event) => {
+      state.direction = event.target.value;
+      scheduleRender();
+    });
+
+    controls.density.addEventListener('input', (event) => {
+      state.density = Number(event.target.value);
+      controls.densityOut.textContent = `${state.density}%`;
+      scheduleRender();
+    });
+
+    controls.scale.addEventListener('input', (event) => {
+      state.scale = Number(event.target.value);
+      controls.scaleOut.textContent = `${(state.scale / 100).toFixed(1)}×`;
+      scheduleRender();
+    });
+
+    controls.speed.addEventListener('input', (event) => {
+      state.speed = Number(event.target.value);
+      controls.speedOut.textContent = `${(state.speed / 100).toFixed(1)}×`;
+      scheduleRender();
+    });
+
+    controls.move.addEventListener('input', (event) => {
+      state.move = Number(event.target.value);
+      controls.moveOut.textContent = `${(state.move / 100).toFixed(1)}×`;
+      scheduleRender();
+    });
+
+    controls.customColors.addEventListener('input', (event) => {
+      state.customColors = event.target.value;
+      scheduleRender();
+    });
+
+    controls.safeArea.addEventListener('change', (event) => {
+      state.safeArea = event.target.checked;
+      scheduleRender();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      state.paused = !state.paused;
+      syncPause();
+    });
+
+    randomizeBtn.addEventListener('click', () => {
+      updateSeed(randomSeed());
+      scheduleRender();
+    });
+
+    copyBtn.addEventListener('click', copySeed);
+
+    resetBtn.addEventListener('click', () => {
+      Object.assign(state, defaults, { seed: randomSeed() });
+      updateSeed(state.seed);
+      syncControls();
+      syncPause();
+      applyPalette();
+      render();
+    });
+
+    function handleKeydown(event) {
+      if (event.key.toLowerCase() !== 'r' || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (target && (target.isContentEditable || /^(INPUT|SELECT|TEXTAREA)$/.test(target.tagName))) return;
+      event.preventDefault();
+      updateSeed(randomSeed());
+      scheduleRender();
+    }
+
+    let resizeTimer = 0;
+    function handleResize() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(render, 160);
+    }
+
+    document.addEventListener('keydown', handleKeydown);
+    window.addEventListener('resize', handleResize);
+
+    function destroy() {
+      clearInterval(liveTimer);
+      clearTimeout(toastTimer);
+      clearTimeout(resizeTimer);
+      cancelAnimationFrame(renderRaf);
+      document.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('resize', handleResize);
+    }
+
+    function apply(next) {
+      Object.assign(state, next);
+      syncControls();
+      syncPause();
+      applyPalette();
+      render();
+    }
+
+    /* ---------- boot ---------- */
+
+    syncControls();
+    syncPause();
+    applyPalette();
+    render();
+    window.__SHAPY_APPLY__ = apply;
+    window.__SHAPY_DESTROY__ = destroy;
+  })();
+  </script>
+</body>
+</html>
