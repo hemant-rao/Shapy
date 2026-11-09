@@ -10,8 +10,9 @@
   "scripts": {
     "dev": "npm --workspace @shapy/demo run dev",
     "build": "npm --workspace @shapy/demo run build",
-    "build:template": "npm --workspace shapy run build:template",
-    "verify": "npm run build:template && npm run build && npm run pack:check",
+    "build:template": "npm --workspace shapy run build:template && node scripts/sync-standalone.mjs",
+    "check:repo": "node scripts/check-repo.mjs",
+    "verify": "npm run build:template && npm run check:repo && npm run build && npm run pack:check",
     "pack:shapy": "npm pack --workspace shapy",
     "pack:check": "npm run pack:shapy -- --dry-run",
     "publish:shapy": "npm publish --workspace shapy"

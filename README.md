@@ -1,5 +1,7 @@
 # Shapy
 
+[![CI](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml/badge.svg)](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml)
+
 **Seedable generative shape backgrounds for the web.**
 
 Shapy turns a short seed into a one-of-one composition of shapes, lines, organic
@@ -408,22 +410,23 @@ npm install
 npm run dev
 ```
 
-The demo runs with Vite. The template is generated from
-`packages/shapy/src/shapy-index.html`:
+The renderer source is `packages/shapy/src/shapy-index.html`. One command
+regenerates the package template and the standalone example:
 
 ```bash
 npm run build:template
 ```
 
-Never edit `packages/shapy/src/shapy-template.js` by hand. Edit the source HTML
-and regenerate.
+Never edit `packages/shapy/src/shapy-template.js` or
+`examples/standalone.html` by hand. Edit the source HTML and regenerate.
 
 Useful commands:
 
 ```bash
 npm run dev            # start the Vue demo with Vite
 npm run build          # build the Vue demo
-npm run verify         # regenerate template, build demo, dry-run the package
+npm run check:repo     # check docs, exports, and generated files
+npm run verify         # regenerate, check, build, and dry-run the package
 npm run pack:shapy     # npm pack the core package
 npm run pack:check     # dry-run the package tarball
 ```
@@ -435,16 +438,19 @@ Shapy-code/
 ├─ packages/
 │  └─ shapy/                   Published npm package
 │     ├─ src/shapy-bg.js       Custom element + attribute mapping
-│     ├─ src/shapy-index.html  Renderer template source
-│     ├─ src/shapy-template.js Generated HTML string (do not edit)
+│     ├─ src/shapy-index.html  Renderer source (edit this)
+│     ├─ src/shapy-template.js Generated package template (do not edit)
 │     ├─ src/catalog.js        Core shape + emoji catalog
 │     ├─ src/stickers.js       Optional sticker registry
 │     ├─ src/index.js          Public createShapy() API
-│     └─ scripts/              Template build script
+│     └─ scripts/              Package template build script
 ├─ apps/
 │  └─ demo/                    Vue 3 background-only + config demo
 ├─ examples/
-│  └─ standalone.html          Standalone advanced reference demo
+│  └─ standalone.html          Generated standalone demo (do not edit)
+├─ scripts/
+│  ├─ sync-standalone.mjs      Copy renderer source to examples/
+│  └─ check-repo.mjs           Docs, package, and generated-file checks
 ├─ docs/
 │  └─ AI_CONTEXT.md            Architecture notes for future work
 ├─ .github/workflows/ci.yml    CI
@@ -458,7 +464,7 @@ Shapy-code/
 ## Publishing
 
 ```bash
-npm run pack:check
+npm run verify
 npm run publish:shapy
 ```
 

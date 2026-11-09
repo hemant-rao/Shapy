@@ -70,6 +70,10 @@ All notable changes to Shapy are documented here.
   lives at `examples/standalone.html`, and the changelog is at the repository
   root. The Vue demo consumes the package through its public exports, including
   the `shapy/stickers` subpath, instead of Vite source aliases.
+- The standalone `examples/standalone.html` is now generated from
+  `packages/shapy/src/shapy-index.html` by `npm run build:template`, removing
+  the manual two-file sync. `npm run verify` now also runs repository checks for
+  docs links, package exports, generated files, and stale paths.
 - The optional sticker registry is now part of the core `shapy` package as the
   `shapy/stickers` subpath. One npm package ships the component, catalog, and
   sticker registry; `shapy-stickers` is no longer a separate package.

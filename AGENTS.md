@@ -24,16 +24,17 @@ Read it before touching code.
    file is generated, unused, or explicitly approved. Do not remove user work.
 4. **Never assume.** Inspect the implementation and test the behavior.
 5. **No extra code.** Prefer the smallest change that satisfies the requirement.
-6. **Never edit `packages/shapy/src/shapy-template.js` by hand.** It is generated
-   from `packages/shapy/src/shapy-index.html`.
-7. **Keep the two renderer sources in sync.**
-   - `packages/shapy/src/shapy-index.html` is the package template source.
-   - `examples/standalone.html` is the standalone advanced reference demo.
-   - Apply renderer changes to both, then regenerate the template.
+6. **Never edit generated files by hand.**
+   - `packages/shapy/src/shapy-template.js` is generated from
+     `packages/shapy/src/shapy-index.html`.
+   - `examples/standalone.html` is generated from the same source.
+7. **Edit the renderer in one place:**
+   `packages/shapy/src/shapy-index.html`.
 8. **Regenerate after renderer edits:**
    ```bash
-   node packages/shapy/scripts/build-template.mjs
+   npm run build:template
    ```
+   This rebuilds the package template and syncs the standalone example.
 9. **Test multiple times after each task.** Fix failures, re-test, then save.
    Do not report a task as complete after a single successful run.
 10. **Keep public API changes backward-compatible** unless the user explicitly
@@ -53,6 +54,7 @@ Read it before touching code.
 | Public types | `packages/shapy/index.d.ts`, `catalog.d.ts` |
 | Renderer source | `packages/shapy/src/shapy-index.html` |
 | Generated renderer | `packages/shapy/src/shapy-template.js` |
+| Generated standalone demo | `examples/standalone.html` |
 | Shape + emoji catalog | `packages/shapy/src/catalog.js` |
 | Optional stickers | `packages/shapy/src/stickers.js` (exposed as `shapy/stickers`) |
 | Demo config UI | `apps/demo/src/pages/Config.vue` |
@@ -63,15 +65,15 @@ Read it before touching code.
 
 1. Inspect the relevant code and current behavior.
 2. Write the smallest possible change.
-3. If the renderer changed, mirror it to `examples/standalone.html` and regenerate
-   the template.
+3. Run `npm run verify` to regenerate generated files, check docs and package
+   consistency, build the demo, and dry-run the package.
 4. Run the demo and verify visually and programmatically:
    - Desktop `1350x800`
    - Mobile `390x844`
    - Wide `1920x1080`
 5. Run the manual checks below.
 6. Update `docs/AI_CONTEXT.md` and `CHANGELOG.md`.
-7. Re-run the checks after the documentation change.
+7. Re-run `npm run verify` after the documentation change.
 8. Only then report completion.
 
 ## Manual test checklist
@@ -94,8 +96,7 @@ Read it before touching code.
 
 - [ ] Version bumped in `packages/shapy/package.json`.
 - [ ] `CHANGELOG.md` updated.
-- [ ] `npm run build:template` run after the last renderer edit.
 - [ ] `npm run verify` succeeds.
-- [ ] `npm run pack:check` output reviewed.
+- [ ] Tarball contents reviewed.
 - [ ] `npm run publish:shapy` run only after explicit user approval and a
       successful `npm login`.
