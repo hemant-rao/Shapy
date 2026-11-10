@@ -22,21 +22,9 @@ export function getRegistryData() {
   return JSON.stringify(STICKER_REGISTRY);
 }
 
-export function registerStickers(target = globalThis) {
-  if (!target) return STICKER_REGISTRY;
-  target.ShapyRegistry = target.ShapyRegistry || {};
-  target.ShapyRegistry.stickers = {
-    getPool() {
-      return STICKER_CATALOG.map((item) => [
-        item.key,
-        {
-          ...item,
-          weight: 1,
-          ratio: [1, 1],
-          style: () => ({})
-        }
-      ]);
-    }
-  };
+export function registerStickers(element) {
+  if (element && typeof element.setAttribute === 'function') {
+    element.setAttribute('registry-data', getRegistryData());
+  }
   return STICKER_REGISTRY;
 }

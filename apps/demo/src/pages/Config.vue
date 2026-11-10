@@ -24,7 +24,7 @@
     <aside class="panel" aria-label="Pattern controls">
       <div class="panel__head">
         <h2>Controls</h2>
-        <button class="iconbtn" type="button" :aria-label="state.paused ? 'Play animations' : 'Pause animations'" @click="state.paused = !state.paused">
+        <button class="iconbtn" type="button" :aria-label="state.paused ? 'Play animations' : 'Pause animations'" :aria-pressed="state.paused" @click="state.paused = !state.paused">
           <svg v-if="!state.paused" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
             <rect x="2" y="1" width="3" height="10" rx="1"></rect>
             <rect x="7" y="1" width="3" height="10" rx="1"></rect>
@@ -85,7 +85,7 @@
           <div v-for="group in shapeGroups" :key="group.id" class="picker__group">
             <div class="picker__head">
               <span class="picker__title">{{ group.label }}</span>
-              <button class="mini mini--ghost" type="button" :title="`Select only ${group.label}`" @click="selectGroup(group)">only</button>
+              <button class="mini mini--ghost" type="button" :title="`Select only ${group.label}`" :aria-label="`Select only ${group.label}`" @click="selectGroup(group)">only</button>
             </div>
             <div class="picker__chips">
               <button
@@ -95,6 +95,7 @@
                 :class="{ 'is-on': selectedKeys.has(shape.key), 'chip--emoji': shape.emoji }"
                 type="button"
                 :title="shape.label"
+                :aria-pressed="selectedKeys.has(shape.key)"
                 @click="toggleShape(shape.key)"
               >{{ shape.emoji || shape.label }}</button>
             </div>
@@ -239,7 +240,7 @@
       </div>
     </aside>
 
-    <div class="toast" :class="{ 'is-visible': toast }">{{ toast }}</div>
+    <div class="toast" role="status" aria-live="polite" :class="{ 'is-visible': toast }">{{ toast }}</div>
   </div>
 </template>
 
@@ -264,7 +265,7 @@ const allShapeKeys = shapeGroups.flatMap((group) => group.shapes.map((shape) => 
 const registryData = getRegistryData();
 
 const defaults = {
-  seed: '4D5E465BCA',
+  seed: '4D5E465BCA7F3A9C2E1B8D6A4F0C5E2D',
   palette: 'midnight',
   shapeSet: 'all',
   layout: 'auto',
@@ -337,7 +338,7 @@ async function copySeed() {
 }
 
 function reset() {
-  Object.assign(state, defaults, { seed: '4D5E465BCA' });
+  Object.assign(state, defaults, { seed: '4D5E465BCA7F3A9C2E1B8D6A4F0C5E2D' });
 }
 </script>
 

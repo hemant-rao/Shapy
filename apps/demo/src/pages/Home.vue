@@ -39,7 +39,7 @@
       </div>
     </main>
 
-    <div class="toast" :class="{ 'is-visible': toast }">{{ toast }}</div>
+    <div class="toast" role="status" aria-live="polite" :class="{ 'is-visible': toast }">{{ toast }}</div>
   </div>
 </template>
 
@@ -47,7 +47,7 @@
 import { ref } from 'vue';
 import { createSeed } from 'shapy';
 
-const seed = ref('4D5E465BCA');
+const seed = ref('4D5E465BCA7F3A9C2E1B8D6A4F0C5E2D');
 const toast = ref('');
 
 function newSeed() {

@@ -2,6 +2,10 @@
 
 Seedable generative shape backgrounds as a zero-dependency Web Component.
 
+Shapy turns a short seed into a one-of-one composition of shapes, lines, organic
+forms, emoji, images, or inline icons. It can also render an optional text
+overlay, so a single element can be a complete hero background.
+
 > **New to Shapy?** Read the
 > [step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md).
 > It covers installation, your first background, common recipes, and
@@ -13,8 +17,8 @@ Seedable generative shape backgrounds as a zero-dependency Web Component.
 npm install shapy
 ```
 
-> **Pre-release note:** `shapy` is not on npm yet. Until the first public
-> release, use the repository example.
+Shapy is a browser-only Web Component. It needs Custom Elements and Shadow DOM,
+which are available in current Chrome, Edge, Firefox, and Safari.
 
 ## Quick start
 
@@ -49,86 +53,299 @@ shapy-background {
 }
 ```
 
-## Features
+## What you can control
 
-- 40 CSS shapes, 29 emoji, and an optional sticker registry at `shapy/stickers`.
-- Seedable compositions: same seed + same settings = same result.
-- Pick one shape, a custom set, a group, or all shapes.
-- Layouts: auto, random scatter, aligned grid, horizontal rows, vertical columns,
-  center cluster, edge frame.
-- Alignment: random, left, center, right, top, middle, bottom.
-- Size modes: mixed, same, subtle, dramatic, small, medium, large.
-- Motion, direction, density, scale, speed, move intensity, custom colors,
-  safe area, and pause controls.
-- Responsive sizing with mobile and wide-screen caps. The `scale` slider also
-  scales the caps, so reducing it shrinks large shapes too.
-- Open Shadow DOM renderer: no iframe, and host-page CSS cannot style the
-  composition's internals.
-
-## How many unique compositions?
-
-A 128-bit seed plus the renderer settings produces an astronomically large
-combination space. Including the sticker registry there are 79 selectable keys
-(40 shapes + 29 emoji + 10 stickers), giving `2^79 + 4` distinct shape pools.
-Combining that with 8 palettes, 7 layouts, 7 alignments, 7 size modes, 81
-density values, 81 scale values, 2 safe-area states, 10 motion modes, 10
-directions, 151 speed values, and 171 move values gives:
-
-- `≈ 5.619877 × 10^37` visual settings per seed
-- `≈ 1.912345 × 10^76` seed + settings combinations
-- `≈ 3.824690 × 10^76` when paused is included
-
-Custom colors and custom image registries add unbounded combinations. The same
-seed and settings always reproduce the same composition; different seeds
-overwhelmingly produce different compositions. The repository README contains
-the full calculation.
+- **The composition:** seed, shape pool, layout, alignment, size mode, density,
+  scale, motion, direction, speed, and movement.
+- **The colors:** palette, background, text, muted text, accent, glow, and scrim,
+  with per-element attributes, host CSS variables, or both.
+- **The text:** an eyebrow, headline, accent line, and body paragraph, positioned
+  in any of nine spots. Text is plain text, never HTML.
+- **The media:** built-in shapes and emoji, the optional sticker registry, your
+  own image URLs, and safe inline SVG icons built from path data.
+- **The API:** `setOptions()`, `getOptions()`, `refresh()`, `shapy:ready`, and
+  `shapy:change`.
+- **The hooks:** `::part(text)`, `::part(eyebrow)`, `::part(headline)`,
+  `::part(body)`, and the `--shapy-*` host variables.
 
 ## Attributes
+
+### Pattern and motion
 
 | Attribute | Default | Description |
 | --- | --- | --- |
 | `seed` | fresh 128-bit seed | Deterministic seed. If omitted, each element instance gets a fresh 128-bit seed. |
 | `palette` | `midnight` | `midnight`, `sandstone`, `bauhaus`, `forest`, `plum`, `ocean`, `clay`, `mono`. |
-| `shape-set` | `all` | `all`, `geometry`, `lines`, `organic`, `emoji`, `stickers`, `custom`. |
-| `shapes` | empty | Comma list or JSON array of shape keys for `custom`. |
-| `registry-data` | empty | JSON string with custom shape groups. |
+| `shape-set` | `all` | `all`, `geometry`, `lines`, `organic`, `emoji`, `stickers`, `custom`, or a registry group id. |
+| `shapes` | empty | Comma list or JSON array of shape keys for `shape-set="custom"`. |
+| `registry-data` | empty | JSON string with custom shape groups. `registry` is an alias. |
 | `layout` | `auto` | `auto`, `scatter`, `grid`, `rows`, `columns`, `center`, `edges`. |
 | `align` | `random` | `random`, `left`, `center`, `right`, `top`, `middle`, `bottom`. |
 | `motion` | `mixed` | `mixed`, `chaos`, `flow`, `bounce`, `drift`, `spin`, `pulse`, `wobble`, `orbit`, `calm`. |
 | `direction` | `random` | `random`, `lr`, `rl`, `tb`, `bt`, `dr`, `dl`, `ur`, `ul`, `alternate`. |
-| `density` | `72` | 20–100. |
-| `scale` | `110` | 60–140. Scales the main and ambient layers, including responsive caps. |
-| `size-mode` | `mixed` | `mixed`, `same`, `subtle`, `dramatic`, `small`, `medium`, `large`. `same` uses one base size for every shape. |
-| `speed` | `100` | 50–200. |
-| `move` | `100` | 30–200. |
-| `custom-colors` | empty | Comma-separated colors. |
-| `safe-area` | off | Boolean attribute. |
-| `paused` | off | Boolean attribute. |
+| `density` | `72` | 20–100. How many shapes are drawn. |
+| `scale` | `110` | 60–140. Overall shape size multiplier, including responsive caps. |
+| `size-mode` | `mixed` | `mixed`, `same`, `subtle`, `dramatic`, `small`, `medium`, `large`. |
+| `speed` | `100` | 50–200. Animation speed multiplier. |
+| `move` | `100` | 30–200. Movement distance multiplier. |
+| `custom-colors` | empty | Comma-separated CSS colors. Unsafe or invalid tokens are dropped. |
+| `safe-area` | off | Boolean attribute. Dims shapes behind the visible text overlay. |
+| `paused` | off | Boolean attribute. Pauses all animations. |
 
-## One shape or a custom mix
+### Colors
+
+All color attributes accept a normal CSS color: hex, `rgb()`, `hsl()`, named
+colors, `transparent`, and so on. Invalid values are ignored. See
+[Theming](#theming) for precedence.
+
+| Attribute | Default | Description |
+| --- | --- | --- |
+| `background` | palette background | Page/background base color. Aliases: `backgroundColor`, `bg`. |
+| `text-color` | palette ink | Headline and primary text. Aliases: `textColor`, `foreground`. |
+| `muted-color` | palette muted | Eyebrow and body text. |
+| `accent-color` | palette accent | Accent text and highlighted words. |
+| `glow-color` | palette glow | Radial glow behind the composition. |
+| `scrim-color` | palette scrim | Readability scrim color. Visible only with `scrim`. |
+| `scrim` | off | Boolean attribute. Shows the readability scrim. |
+
+### Text
+
+Text is optional. Leave every text attribute empty to render only the
+background.
+
+| Attribute | Default | Description |
+| --- | --- | --- |
+| `text` | empty | Headline. Use a real newline (or `&#10;` in HTML) for line breaks. `headline` is an alias. |
+| `text-accent` | empty | Accent line appended after the headline in the accent color. |
+| `subtext` | empty | Supporting paragraph. `description` is an alias. |
+| `eyebrow` | empty | Small uppercase label above the headline. |
+| `text-position` | `middle-left` | `top-left`, `top-center`, `top-right`, `middle-left`, `middle-center`, `middle-right`, `bottom-left`, `bottom-center`, `bottom-right`. |
+| `text-align` | inferred | `left`, `center`, or `right`. Defaults to the alignment implied by `text-position`. |
+| `text-scale` | `100` | 50–200. Scales the headline and body text. |
+| `font-family` | package display font | A safe CSS font stack, for example `Georgia, serif`. |
+| `font-weight` | `400` | 100–900. Headline weight. |
+
+Boolean attributes are enabled by presence:
 
 ```html
-<shapy-background shape-set="custom" shapes="circle"></shapy-background>
+<shapy-background safe-area paused scrim></shapy-background>
 ```
+
+## Text overlay
 
 ```html
 <shapy-background
-  shape-set="custom"
-  shapes="triangleUp,hexagon,blob,emoji-0"
+  seed="hero"
+  palette="ocean"
+  background="#06121f"
+  text-color="#f8fafc"
+  accent-color="#fbbf24"
+  eyebrow="Shapy package"
+  text="Build something&#10;memorable"
+  text-accent="today."
+  subtext="A complete hero background from one custom element."
+  text-position="middle-center"
+  text-scale="110"
+  font-family="Georgia, serif"
+  font-weight="600"
+  scrim
+  safe-area
+  style="position: fixed; inset: 0; display: block;"
 ></shapy-background>
 ```
 
-Shape keys come from `shapy/catalog`:
+- `text` and `text-accent` are rendered as text nodes. HTML is not interpreted.
+- `text-accent` is appended on its own line and uses the accent color.
+- The overlay is `pointer-events: none`; it never blocks clicks on your page.
+- When text is visible, the default host role becomes `group` and the default
+  label comes from the headline. When no text is set, the role returns to `img`
+  and the label returns to `Shapy generative background`.
+- A host-supplied `role` or `aria-label` is never overwritten.
+- `safe-area` uses the visible text overlay's bounds, so shapes behind the text
+  are dimmed.
 
-```js
-import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy/catalog';
+## Theming
 
-const geometry = SHAPE_GROUPS.find((group) => group.id === 'geometry');
-const keys = geometry.shapes.map((shape) => shape.key);
-const emojiKeys = EMOJI_GROUP.shapes.map((shape) => shape.key);
+Color precedence, from strongest to weakest:
+
+1. An explicit color attribute on the element.
+2. A host CSS custom property on the element or an ancestor.
+3. The selected palette.
+
+| Host variable | Controls |
+| --- | --- |
+| `--shapy-bg` | Background base color |
+| `--shapy-ink` | Primary text color |
+| `--shapy-muted` | Muted text color |
+| `--shapy-accent` | Accent text color |
+| `--shapy-glow` | Radial glow color |
+| `--shapy-scrim` | Scrim color |
+
+```css
+.hero-background {
+  --shapy-bg: #08111f;
+  --shapy-ink: #f8fafc;
+  --shapy-muted: #a5b4c8;
+  --shapy-accent: #fbbf24;
+  --shapy-glow: rgb(251 191 36 / 0.18);
+  --shapy-scrim: rgb(8 17 31 / 0.72);
+}
 ```
 
-Emoji keys are `emoji-0` through `emoji-28`.
+```html
+<shapy-background class="hero-background" palette="ocean" scrim></shapy-background>
+```
+
+`custom-colors` is separate: it overrides the colors used by the generated
+shapes, while the color attributes and host variables theme the page, scrim, and
+text.
+
+### CSS parts
+
+The text overlay exposes stable parts:
+
+```css
+shapy-background::part(text) {
+  max-width: 52rem;
+}
+
+shapy-background::part(headline) {
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+}
+
+shapy-background::part(eyebrow) {
+  letter-spacing: 0.24em;
+}
+
+shapy-background::part(body) {
+  max-width: 36ch;
+}
+```
+
+## Custom shapes, images, and icons
+
+Custom media lives in a registry. The registry is passed as JSON through
+`registry-data`; it is never stored globally.
+
+```js
+const registry = {
+  brand: {
+    label: 'Brand marks',
+    items: [
+      { key: 'logo', label: 'Logo', image: '/logo.svg', size: 1.1 },
+      { key: 'spark', label: 'Spark', emoji: '✨', color: '#fbbf24' },
+      {
+        key: 'heart',
+        label: 'Heart',
+        icon: {
+          path: 'M12 21s-7-4.35-9.33-8.02C.8 9.9 2.2 6 5.5 6c2 0 3.2 1.2 3.5 1.6C9.3 7.2 10.5 6 12.5 6c3.3 0 4.7 3.9 2.83 6.98C19 16.65 12 21 12 21z',
+          viewBox: '0 0 24 24',
+          fill: '#ff3366'
+        },
+        size: 1.2
+      }
+    ]
+  }
+};
+
+const element = document.querySelector('shapy-background');
+element.setAttribute('registry-data', JSON.stringify(registry));
+element.setAttribute('shape-set', 'brand');
+```
+
+Or select individual registry items:
+
+```js
+element.setAttribute('shape-set', 'custom');
+element.setAttribute('shapes', 'logo,spark,heart');
+```
+
+### Registry item format
+
+```js
+{
+  key: 'unique-key',        // string; auto-generated if omitted
+  label: 'Readable name',   // optional; used as image alt text
+  emoji: '✨',              // optional media
+  image: '/logo.svg',       // optional media
+  icon: { ... },            // optional media
+  color: '#fbbf24',         // optional tint for emoji/icons
+  size: 1,                  // 0.05–5, default 1
+  weight: 1,                // 0.01–100, default 1
+  ratio: [1, 1]             // [width, height], each 0.05–10
+}
+```
+
+An item must provide at least one of `emoji`, `image`, or `icon`; items without
+renderable media are dropped. If more than one is provided, `emoji` wins, then
+`icon`, then `image`.
+
+A group can be an object with `label` and `items`, or just an array of items:
+
+```js
+const registry = {
+  simple: [
+    { key: 'star', emoji: '⭐' },
+    { key: 'dot', image: '/dot.png' }
+  ]
+};
+```
+
+### Image formats
+
+Allowed:
+
+- `https://example.com/logo.png`
+- `//cdn.example.com/logo.png`
+- `/assets/logo.svg`, `./logo.svg`, `../logo.svg` (resolved by the browser
+  against your page)
+- `data:image/png;base64,...`
+- `data:image/jpeg;...`, `data:image/gif;...`, `data:image/webp;...`,
+  `data:image/avif;...`, `data:image/svg+xml;...`
+
+Rejected:
+
+- `javascript:...`
+- `data:text/html,...`
+- `blob:...`, `ftp:...`, and every other scheme
+- URLs containing backslashes
+
+Images render with `object-fit: contain`. Shapy validates the URL format but
+does not fetch, proxy, or inspect remote image content.
+
+### Icon format
+
+Icons are path data, not raw SVG markup. Raw `<svg>` strings are rejected.
+
+```js
+{
+  path: 'M12 2 2 22h20L12 2z',   // one path
+  paths: ['M...', 'M...'],        // or several paths
+  viewBox: '0 0 24 24',           // optional, four numbers
+  fill: 'currentColor',           // optional CSS color
+  stroke: '#ffffff',              // optional CSS color
+  strokeWidth: 2                  // optional, 0–50
+}
+```
+
+Defaults:
+
+- `viewBox` is `0 0 24 24` when omitted or invalid.
+- With no `fill` and no `stroke`, paths use `currentColor`.
+- With `stroke` and no `strokeWidth`, the width is `2`.
+- Path data is limited to SVG path commands and numbers.
+
+### Limits and sanitization
+
+- 20 registry groups per element.
+- 200 items per group.
+- 64 custom colors.
+- 256 shape keys.
+- Labels are truncated to 120 characters; emoji to 32 characters.
+- Numeric values are clamped to the ranges above.
+- Every value is treated as untrusted; unsafe colors, images, and icons are
+  dropped instead of being rendered.
 
 ## Optional stickers
 
@@ -141,28 +358,29 @@ element.setAttribute('registry-data', JSON.stringify(STICKER_REGISTRY));
 element.setAttribute('shape-set', 'stickers');
 ```
 
-Stickers are part of the `shapy` package and load only when you import the
-`shapy/stickers` subpath.
+`shapy/stickers` exports:
 
-Custom image shapes use the same registry format:
+- `STICKER_CATALOG` — serializable sticker items.
+- `STICKER_REGISTRY` — a ready-to-serialize registry group.
+- `getRegistryData()` — returns the JSON string for `registry-data`.
+- `registerStickers(element)` — sets `registry-data` on an element and returns
+  the registry. It never writes to `globalThis`.
 
 ```js
-const registry = {
-  brand: {
-    label: 'Brand',
-    items: [{ key: 'logo', label: 'Logo', image: '/logo.svg', size: 1.1 }]
-  }
-};
+import { registerStickers } from 'shapy/stickers';
 
-element.setAttribute('registry-data', JSON.stringify(registry));
-element.setAttribute('shape-set', 'custom');
-element.setAttribute('shapes', 'logo');
+const element = document.querySelector('shapy-background');
+registerStickers(element);
+element.setAttribute('shape-set', 'stickers');
 ```
+
+Stickers are part of the `shapy` package and load only when you import the
+`shapy/stickers` subpath.
 
 ## JavaScript API
 
 ```js
-import { createShapy } from 'shapy';
+import { createShapy, createSeed } from 'shapy';
 
 const element = createShapy().mount(document.querySelector('#background'), {
   seed: '4D5E465BCA',
@@ -171,20 +389,107 @@ const element = createShapy().mount(document.querySelector('#background'), {
   shapes: ['circle', 'emoji-0'],
   layout: 'rows',
   align: 'center',
-  sizeMode: 'same'
+  sizeMode: 'same',
+  background: '#08111f',
+  accentColor: '#fbbf24',
+  text: 'Shape your',
+  textAccent: 'story.',
+  textPosition: 'middle-center',
+  subtext: 'A complete hero from one element.'
 });
+
+element.setOptions({ palette: 'plum', text: 'Updated live' });
+element.refresh();
+console.log(element.getOptions());
 ```
 
 `mount()` accepts camelCase or kebab-case keys, takes an element as the
 container, and returns the created element. Use `document.querySelector()` if
 you only have a selector string. It replaces the container's existing content.
 
-To create a new pattern:
+### `setOptions(options)`
+
+Updates any subset of options and returns the element. camelCase and kebab-case
+keys both work. `null`, `undefined`, and `false` remove an option; `true` adds a
+boolean attribute.
 
 ```js
-import { createSeed } from 'shapy';
+element.setOptions({
+  density: 48,
+  paused: true,
+  text: null,
+  background: null
+});
+```
 
+### `getOptions()`
+
+Returns the current normalized options, including the generated or explicit
+seed, parsed registry, color values, and text settings. `customColors` is an
+array of colors.
+
+```js
+const options = element.getOptions();
+console.log(options.seed, options.density, options.customColors);
+```
+
+### `refresh()`
+
+Forces a re-render with the current attributes and returns the element.
+
+```js
+element.refresh();
+```
+
+### Events
+
+```js
+element.addEventListener('shapy:ready', (event) => {
+  console.log('first render', event.detail.seed, event.detail.options);
+});
+
+element.addEventListener('shapy:change', (event) => {
+  console.log('updated options', event.detail.options);
+});
+```
+
+- `shapy:ready` fires once after the first render.
+- `shapy:change` fires after `setOptions()`, `refresh()`, and debounced attribute
+  updates.
+- Both events expose `detail.element`; `shapy:ready` also exposes
+  `detail.seed`. Both include `detail.options` from `getOptions()`.
+
+### New seed
+
+```js
 element.setAttribute('seed', createSeed());
+```
+
+## TypeScript
+
+Type definitions ship with the package. The element, options, registry items,
+icons, events, and methods are all typed:
+
+```ts
+import { createShapy, type ShapyOptions, type ShapyRegistry } from 'shapy';
+
+const registry: ShapyRegistry = {
+  brand: {
+    label: 'Brand',
+    items: [{ key: 'logo', image: '/logo.svg', size: 1.1 }]
+  }
+};
+
+const options: ShapyOptions = {
+  seed: '4D5E465BCA',
+  palette: 'ocean',
+  text: 'Hello',
+  textPosition: 'middle-center',
+  registryData: registry
+};
+
+const container = document.querySelector('#background');
+if (container) createShapy().mount(container, options);
 ```
 
 ## Troubleshooting
@@ -196,6 +501,22 @@ element.setAttribute('seed', createSeed());
    `shapy-background { position: fixed; inset: 0; display: block; }`.
 3. Check the browser console for errors.
 
+### The text does not appear
+
+Check that at least one of `text`, `text-accent`, `subtext`, or `eyebrow` is set.
+An empty `text` attribute alone is not enough.
+
+### A custom item is missing
+
+An item needs `emoji`, `image`, or `icon`. Check that the key is selected through
+`shape-set` or `shapes`, and that the image URL uses an allowed format.
+
+### Stickers do not appear
+
+Import from `shapy/stickers`, set `registry-data` to
+`JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"` or use
+`shape-set="custom"` with sticker keys.
+
 ### Vue says "Failed to resolve component: shapy-background"
 
 Add the `isCustomElement` option shown in the
@@ -205,17 +526,14 @@ Add the `isCustomElement` option shown in the
 
 Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
 
-### Stickers do not appear
-
-Import from `shapy/stickers`, set `registry-data` to
-`JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"`.
-
 ## Documentation
 
 - [Step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md)
 - [Attributes](#attributes)
+- [Text overlay](#text-overlay)
+- [Theming](#theming)
+- [Custom shapes, images, and icons](#custom-shapes-images-and-icons)
 - [JavaScript API](#javascript-api)
-- [Optional stickers](#optional-stickers)
 - [Full repository documentation](https://github.com/hemant-rao/Shapy#readme)
 
 ## License

@@ -952,6 +952,17 @@ export const SHAPY_HTML = `<!doctype html>
     const toastEl = $('#toast');
     const pauseBtn = $('#pause');
 
+    /* ---------- validation constants ---------- */
+
+    // Declared before state initialization so registry sanitization can use
+    // them during the renderer's first boot.
+    const CSS_COLOR_RE = /^(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(rgb|rgba|hsl|hsla|hwb|lab|lch|color)\\([^)]*\\)|[a-z]+(-[a-z]+)*|transparent|currentcolor|inherit|initial|unset|revert)$/;
+    const SAFE_IMAGE_DATA_RE = /^data:image\\/(png|jpe?g|gif|webp|avif|svg\\+xml)[;,]/i;
+    const SAFE_IMAGE_HTTP_RE = /^(https?:)?\\/\\//i;
+    const URL_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+    const SVG_PATH_RE = /^[MmZzLlHhVvCcSsQqTtAaEe0-9.,+\\-\\s]*$/;
+    const VIEWBOX_RE = /^-?(?:\\d+\\.?\\d*|\\.\\d+)(?:[ ,]+-?(?:\\d+\\.?\\d*|\\.\\d+)){3}$/;
+
     /* ---------- palettes ---------- */
 
     const PALETTES = {
@@ -1145,7 +1156,9 @@ export const SHAPY_HTML = `<!doctype html>
     function readSeed() {
       const params = new URLSearchParams(location.search);
       const raw = (params.get('seed') || '').trim();
-      return raw ? decodeURIComponent(raw).slice(0, 64) : '';
+      // URLSearchParams already decodes percent-encoding. Decoding again would
+      // throw on a literal "%" and change valid seeds.
+      return raw ? raw.slice(0, 64) : '';
     }
 
     function weightedPick(items, rand) {
@@ -1156,6 +1169,100 @@ export const SHAPY_HTML = `<!doctype html>
         if (r <= 0) return item[0];
       }
       return items[0][0];
+    }
+
+    const NUMERIC_LIMITS = {
+      density: [20, 100],
+      scale: [60, 140],
+      speed: [50, 200],
+      move: [30, 200],
+      textScale: [50, 200],
+      fontWeight: [100, 900]
+    };
+
+    function clampNumber(value, fallback, min, max) {
+      if (value === undefined || value === null || value === '') return fallback;
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(max, Math.max(min, number));
+    }
+
+    function sanitizeRatio(value) {
+      if (!Array.isArray(value) || value.length < 2) return [1, 1];
+      return [
+        clampNumber(value[0], 1, 0.05, 10),
+        clampNumber(value[1], 1, 0.05, 10)
+      ];
+    }
+
+    function sanitizeRegistry(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+      const clean = Object.create(null);
+      let groupCount = 0;
+      for (const [groupId, group] of Object.entries(raw)) {
+        if (groupCount >= 20) break;
+        if (!group || typeof group !== 'object') continue;
+        const items = Array.isArray(group) ? group : group.items;
+        if (!Array.isArray(items) || !items.length) continue;
+        const cleanItems = [];
+        for (const item of items) {
+          if (cleanItems.length >= 200) break;
+          if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+          const key = typeof item.key === 'string' && item.key.trim()
+            ? item.key.trim()
+            : \`\${groupId}-\${cleanItems.length}\`;
+          const cleanItem = {
+            key: key.slice(0, 120),
+            size: clampNumber(item.size, 1, 0.05, 5),
+            weight: clampNumber(item.weight, 1, 0.01, 100),
+            ratio: sanitizeRatio(item.ratio)
+          };
+          if (typeof item.label === 'string') cleanItem.label = item.label.slice(0, 120);
+          if (typeof item.emoji === 'string' && item.emoji.trim()) cleanItem.emoji = item.emoji.slice(0, 32);
+          if (typeof item.image === 'string') {
+            const image = sanitizeImageUrl(item.image);
+            if (image) cleanItem.image = image;
+          }
+          if (item.icon) {
+            const icon = sanitizeIcon(item.icon);
+            if (icon) cleanItem.icon = icon;
+          }
+          if (typeof item.color === 'string') {
+            const color = sanitizeColor(item.color);
+            if (color) cleanItem.color = color;
+          }
+          // Registry items must render something. Empty/malformed items are
+          // dropped instead of becoming invisible shapes.
+          if (cleanItem.emoji || cleanItem.image || cleanItem.icon) cleanItems.push(cleanItem);
+        }
+        if (cleanItems.length) {
+          clean[groupId] = {
+            label: typeof group.label === 'string' ? group.label.slice(0, 120) : undefined,
+            items: cleanItems
+          };
+          groupCount++;
+        }
+      }
+      return groupCount ? clean : null;
+    }
+
+    function normalizeState(target) {
+      target.density = clampNumber(target.density, defaults.density, ...NUMERIC_LIMITS.density);
+      target.scale = clampNumber(target.scale, defaults.scale, ...NUMERIC_LIMITS.scale);
+      target.speed = clampNumber(target.speed, defaults.speed, ...NUMERIC_LIMITS.speed);
+      target.move = clampNumber(target.move, defaults.move, ...NUMERIC_LIMITS.move);
+      target.textScale = clampNumber(target.textScale, defaults.textScale, ...NUMERIC_LIMITS.textScale);
+      target.fontWeight = clampNumber(target.fontWeight, defaults.fontWeight, ...NUMERIC_LIMITS.fontWeight);
+      target.shapes = Array.isArray(target.shapes) ? target.shapes.map(String).slice(0, 256) : [];
+      target.registry = sanitizeRegistry(target.registry);
+      target.background = sanitizeColor(target.background) || '';
+      target.textColor = sanitizeColor(target.textColor) || '';
+      target.mutedColor = sanitizeColor(target.mutedColor) || '';
+      target.accentColor = sanitizeColor(target.accentColor) || '';
+      target.glowColor = sanitizeColor(target.glowColor) || '';
+      target.scrimColor = sanitizeColor(target.scrimColor) || '';
+      target.scrim = Boolean(target.scrim);
+      return target;
     }
 
     /* ---------- state ---------- */
@@ -1176,10 +1283,19 @@ export const SHAPY_HTML = `<!doctype html>
       safeArea: false,
       paused: false,
       shapes: [],
-      registry: null
+      registry: null,
+      background: '',
+      textColor: '',
+      mutedColor: '',
+      accentColor: '',
+      glowColor: '',
+      scrimColor: '',
+      scrim: false,
+      textScale: 100,
+      fontWeight: 400
     };
 
-    const state = Object.assign({}, defaults, window.__SHAPY_STATE__ || {}, { seed: (window.__SHAPY_STATE__ && window.__SHAPY_STATE__.seed) || readSeed() || randomSeed() });
+    const state = normalizeState(Object.assign({}, defaults, window.__SHAPY_STATE__ || {}, { seed: (window.__SHAPY_STATE__ && window.__SHAPY_STATE__.seed) || readSeed() || randomSeed() }));
 
     const randomizeBtn = $('#randomize');
     const copyBtn = $('#copySeed');
@@ -1212,56 +1328,99 @@ export const SHAPY_HTML = `<!doctype html>
 
     function applyPalette() {
       const p = PALETTES[state.palette] || PALETTES.midnight;
+      // Explicit attributes win. Otherwise host CSS custom properties win, then
+      // the selected palette supplies the fallback.
+      const themed = (value, cssVar, fallback) => value || \`var(\${cssVar}, \${fallback})\`;
       const vars = {
-        '--bg': p.bg,
-        '--ink': p.ink,
-        '--muted': p.muted,
-        '--accent': p.accent,
+        '--bg': themed(state.background, '--shapy-bg', p.bg),
+        '--ink': themed(state.textColor, '--shapy-ink', p.ink),
+        '--muted': themed(state.mutedColor, '--shapy-muted', p.muted),
+        '--accent': themed(state.accentColor, '--shapy-accent', p.accent),
         '--accent-ink': p.accentInk,
         '--panel': p.panel,
         '--border': p.border,
-        '--scrim': p.scrim,
-        '--glow': p.glow
+        '--scrim': themed(state.scrimColor, '--shapy-scrim', p.scrim),
+        '--glow': themed(state.glowColor, '--shapy-glow', p.glow)
       };
       for (const [key, value] of Object.entries(vars)) app.style.setProperty(key, value);
       app.style.colorScheme = p.dark ? 'dark' : 'light';
-      paletteDots.innerHTML = p.shapes.map((color) => \`<span class="palette-dot" style="background:\${color}"></span>\`).join('');
+      app.classList.toggle('has-scrim', Boolean(state.scrim));
+      const dots = state.customColors ? sanitizeColors(state.customColors) : p.shapes;
+      paletteDots.innerHTML = dots.map((color) => \`<span class="palette-dot" style="background:\${color}"></span>\`).join('');
     }
 
     const EMOJI_POOL = ['⭐','✨','❄️','🔥','💧','🌙','☀️','⚡','🌈','🎈','🎨','🎯','🌀','💫','🔮','🧩','🎲','🍀','🌸','🍄','🪐','🌪️','❤️','💙','💚','💛','💜','🖤','🤍'];
 
-    // Only allow http(s) or safe data:image/* URLs for custom images. Blocks
-    // javascript:, data:text/html, and other dangerous schemes.
-    const SAFE_IMAGE_RE = /^(https?:)?\\/\\/|^data:image\\/(png|jpeg|jpg|gif|webp|svg\\+xml);/;
-
+    // Allow http(s), protocol-relative, relative, and safe data:image/* URLs.
+    // Blocks javascript:, data:text/html, blob:, and every other scheme.
     function sanitizeImageUrl(url) {
       if (typeof url !== 'string' || !url.trim()) return null;
       const trimmed = url.trim();
-      if (!SAFE_IMAGE_RE.test(trimmed)) return null;
-      // Strip any data URI that is not an image.
-      if (trimmed.startsWith('data:') && !/^data:image\\//i.test(trimmed)) return null;
+      if (SAFE_IMAGE_DATA_RE.test(trimmed)) return trimmed;
+      if (SAFE_IMAGE_HTTP_RE.test(trimmed)) return trimmed;
+      if (URL_SCHEME_RE.test(trimmed)) return null;
+      if (trimmed.includes('\\\\')) return null;
       return trimmed;
     }
 
-    const CSS_COLOR_RE = /^(#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(rgb|rgba|hsl|hsla|hwb|lab|lch|color)\\([^)]*\\)|[a-z]+(-[a-z]+)*|transparent|currentcolor|inherit|initial|unset|revert)$/;
+    function sanitizeIcon(raw) {
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+      const paths = [];
+      if (typeof raw.path === 'string') paths.push(raw.path);
+      if (Array.isArray(raw.paths)) paths.push(...raw.paths.filter((path) => typeof path === 'string'));
+      const cleanPaths = paths
+        .map((path) => path.trim())
+        .filter((path) => path && path.length <= 20000 && SVG_PATH_RE.test(path))
+        .slice(0, 100);
+      if (!cleanPaths.length) return null;
+      const viewBox = typeof raw.viewBox === 'string' && VIEWBOX_RE.test(raw.viewBox.trim())
+        ? raw.viewBox.trim()
+        : '0 0 24 24';
+      const icon = { paths: cleanPaths, viewBox };
+      const fill = sanitizeColor(raw.fill);
+      const stroke = sanitizeColor(raw.stroke);
+      if (fill) icon.fill = fill;
+      if (stroke) icon.stroke = stroke;
+      icon.strokeWidth = raw.strokeWidth === undefined
+        ? (stroke ? 2 : 0)
+        : clampNumber(raw.strokeWidth, 0, 0, 50);
+      return icon;
+    }
 
     function sanitizeColor(value) {
       if (typeof value !== 'string' || !value.trim()) return null;
       const token = value.trim();
       if (!CSS_COLOR_RE.test(token)) return null;
       if (/url\\s*\\(|javascript\\s*:|expression\\s*\\(|behaviour\\s*:|behavior\\s*:/i.test(token)) return null;
+      if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && !CSS.supports('color', token)) return null;
       return token;
+    }
+
+    function splitColorList(raw) {
+      const parts = [];
+      let depth = 0;
+      let start = 0;
+      for (let index = 0; index < raw.length; index++) {
+        const char = raw[index];
+        if (char === '(') depth++;
+        else if (char === ')') depth = Math.max(0, depth - 1);
+        else if (char === ',' && depth === 0) {
+          parts.push(raw.slice(start, index));
+          start = index + 1;
+        }
+      }
+      parts.push(raw.slice(start));
+      return parts;
     }
 
     function sanitizeColors(raw) {
       if (!raw || !raw.trim()) return [];
-      return raw.split(',').map((s) => sanitizeColor(s)).filter(Boolean);
+      return splitColorList(raw).map((s) => sanitizeColor(s)).filter(Boolean).slice(0, 64);
     }
 
     /* ---------- shape selection + motion ---------- */
 
     function getPool() {
-      const registry = state.registry;
       if (state.shapeSet === 'custom') {
         const wanted = new Set(Array.isArray(state.shapes) ? state.shapes : []);
         const all = getAllEntries();
@@ -1271,9 +1430,6 @@ export const SHAPY_HTML = `<!doctype html>
       }
       const injected = registryEntries(state.shapeSet);
       if (injected) return injected;
-      if (registry[state.shapeSet] && registry[state.shapeSet].getPool) {
-        return registry[state.shapeSet].getPool();
-      }
       if (state.shapeSet === 'emoji') {
         return EMOJI_POOL.map((e, i) => [\`emoji-\${i}\`, { weight: 1, size: 1, ratio: [1,1], emoji: e, style: () => ({}) }]);
       }
@@ -1289,10 +1445,14 @@ export const SHAPY_HTML = `<!doctype html>
       if (!group) return null;
       const items = Array.isArray(group) ? group : group.items;
       if (!Array.isArray(items) || !items.length) return null;
-      return items.map((item, i) => [
-        item.key || \`\${groupId}-\${i}\`,
-        Object.assign({ group: groupId, weight: 1, size: 1, ratio: [1, 1] }, item, { style: () => ({}) })
-      ]);
+      return items.map((item, i) => {
+        const def = item && typeof item === 'object' && !Array.isArray(item) ? item : {};
+        const key = typeof def.key === 'string' && def.key ? def.key : \`\${groupId}-\${i}\`;
+        return [
+          key,
+          Object.assign({ weight: 1, size: 1, ratio: [1, 1] }, def, { group: groupId, style: () => ({}) })
+        ];
+      });
     }
 
     function getAllEntries() {
@@ -1560,7 +1720,7 @@ export const SHAPY_HTML = `<!doctype html>
     }
 
     function createShape(kind, def, size, x, y, color, opacity, rotation, motion, rand) {
-      const ratio = def.ratio || [1, 1];
+      const ratio = sanitizeRatio(def.ratio);
       let width = size * ratio[0];
       let height = size * ratio[1];
       if (kind === 'lineV') width = Math.max(1.5, width);
@@ -1579,6 +1739,7 @@ export const SHAPY_HTML = `<!doctype html>
       inner.className = 'shape__inner';
       inner.dataset.id = id;
       const safeImage = def.image ? sanitizeImageUrl(def.image) : null;
+      const safeIcon = def.icon ? sanitizeIcon(def.icon) : null;
       if (def.emoji) {
         inner.textContent = def.emoji;
         inner.style.fontSize = \`\${size * 0.8}px\`;
@@ -1586,7 +1747,32 @@ export const SHAPY_HTML = `<!doctype html>
         inner.style.display = 'grid';
         inner.style.placeItems = 'center';
         inner.style.background = 'transparent';
-        inner.style.color = 'currentColor';
+        inner.style.color = def.color || 'currentColor';
+      } else if (safeIcon) {
+        inner.style.display = 'grid';
+        inner.style.placeItems = 'center';
+        inner.style.background = 'transparent';
+        inner.style.color = def.color || 'currentColor';
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', safeIcon.viewBox);
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.display = 'block';
+        for (const pathData of safeIcon.paths) {
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', pathData);
+          path.setAttribute('fill', safeIcon.fill || (safeIcon.stroke ? 'none' : 'currentColor'));
+          if (safeIcon.stroke) path.setAttribute('stroke', safeIcon.stroke);
+          if (safeIcon.strokeWidth) {
+            path.setAttribute('stroke-width', String(safeIcon.strokeWidth));
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+          }
+          svg.appendChild(path);
+        }
+        inner.appendChild(svg);
       } else if (safeImage) {
         inner.style.display = 'grid';
         inner.style.placeItems = 'center';
@@ -1614,7 +1800,7 @@ export const SHAPY_HTML = `<!doctype html>
       inner.style.setProperty('--ease', motion.ease);
       inner.style.setProperty('--adir', motion.adir);
       inner.style.setProperty('--iterations', motion.iterations || 'infinite');
-      if (!def.emoji && !def.image) {
+      if (!def.emoji && !safeIcon && !safeImage) {
         Object.assign(inner.style, def.style(size, rand));
       }
       el.appendChild(inner);
@@ -1647,9 +1833,25 @@ export const SHAPY_HTML = `<!doctype html>
         Math.min(vw, vh) * (isMobile ? 0.16 : 0.18),
         isMobile ? 64 : 120
       );
-      let safeRect = state.safeArea ? heroCopy.getBoundingClientRect() : null;
-      if (safeRect && (!safeRect.width || !safeRect.height)) {
-        safeRect = { left: vw * 0.08, right: vw * 0.62, top: vh * 0.2, bottom: vh * 0.8 };
+      let safeRect = null;
+      if (state.safeArea) {
+        // Prefer the package's optional text overlay. The standalone demo and
+        // package elements without text fall back to the hidden hero copy.
+        const textOverlay = $('#shapyText');
+        const safeEl = textOverlay && !textOverlay.hidden ? textOverlay : heroCopy;
+        const copyRect = safeEl.getBoundingClientRect();
+        const hostRect = shapesEl.getBoundingClientRect();
+        safeRect = {
+          left: copyRect.left - hostRect.left,
+          right: copyRect.right - hostRect.left,
+          top: copyRect.top - hostRect.top,
+          bottom: copyRect.bottom - hostRect.top,
+          width: copyRect.width,
+          height: copyRect.height
+        };
+        if (!safeRect.width || !safeRect.height) {
+          safeRect = { left: vw * 0.08, right: vw * 0.62, top: vh * 0.2, bottom: vh * 0.8 };
+        }
       }
 
       const layoutRand = makeRng(\`\${state.seed}|layout\`);
@@ -1659,7 +1861,7 @@ export const SHAPY_HTML = `<!doctype html>
 
       const weightMap = new Map();
       for (const [key, def] of pool) {
-        let weight = (def.weight || 1) * (0.35 + rand() * 2.1);
+        let weight = clampNumber(def.weight, 1, 0.01, 100) * (0.35 + rand() * 2.1);
         if (pool.length > 6 && rand() < 0.3) weight = 0;
         weightMap.set(key, weight);
       }
@@ -1695,7 +1897,8 @@ export const SHAPY_HTML = `<!doctype html>
 
       for (let i = 0; i < ambientCount; i++) {
         const [kind, def] = ambientSource[Math.floor(arand() * ambientSource.length)];
-        const ratioMax = Math.max(...(def.ratio || [1, 1]));
+        const ambientRatio = sanitizeRatio(def.ratio);
+        const ratioMax = Math.max(ambientRatio[0], ambientRatio[1]);
         const size = Math.min(
           Math.min(vw, vh) * (0.08 + arand() * 0.14) * (state.scale / 100),
           ambientMax / ratioMax
@@ -1740,9 +1943,10 @@ export const SHAPY_HTML = `<!doctype html>
         recent.push(kind);
         if (recent.length > 3) recent.shift();
 
-        const ratioMax = Math.max(...(def.ratio || [1, 1]));
+        const shapeRatio = sanitizeRatio(def.ratio);
+        const ratioMax = Math.max(shapeRatio[0], shapeRatio[1]);
         const sizeScale = state.scale / 100;
-        const shapeScale = state.sizeMode === 'same' ? 1 : (def.size || 1);
+        const shapeScale = state.sizeMode === 'same' ? 1 : clampNumber(def.size, 1, 0.05, 5);
         let sizeFactor;
         switch (state.sizeMode) {
           case 'same': sizeFactor = 0.5; break;
@@ -1794,11 +1998,15 @@ export const SHAPY_HTML = `<!doctype html>
       renderRaf = requestAnimationFrame(render);
     }
 
+    function prefersReducedMotion() {
+      return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
     let liveTimer = null;
     function startLiveUpdates() {
       if (liveTimer) clearInterval(liveTimer);
       liveTimer = setInterval(() => {
-        if (state.paused) return;
+        if (state.paused || prefersReducedMotion()) return;
         const inners = shapesEl.querySelectorAll('.shape__inner');
         if (!inners.length) return;
         const rng = makeRng(\`\${state.seed}|live|\${Date.now()}\`);
@@ -2019,6 +2227,7 @@ export const SHAPY_HTML = `<!doctype html>
 
     function apply(next) {
       Object.assign(state, next);
+      normalizeState(state);
       syncControls();
       syncPause();
       applyPalette();

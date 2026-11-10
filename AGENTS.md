@@ -46,9 +46,12 @@ Read it before touching code.
     `JSON.parse` and never inject unsanitized JSON or HTML into the renderer. Do
     not add `eval`, `new Function`, or unsanitized HTML injection.
     - Validate `custom-colors` against a CSS color allowlist; drop unsafe tokens.
-    - Validate `registry-data` image URLs: only `http(s)` and safe `data:image/*`;
-      drop `javascript:`, `data:text/html`, and other schemes.
-    - Keep `ShapyRegistry` per-instance; never expose on `globalThis`.
+    - Validate `registry-data` image URLs: only `http(s)`, protocol-relative,
+      relative, and safe `data:image/*`; drop `javascript:`, `data:text/html`,
+      backslash paths, and other schemes. Validate icon path data with an
+      allowlist; never accept raw SVG markup.
+    - Keep custom registries per-instance through `registry-data`; never expose a
+      registry on `globalThis`.
     - Never set `img.src` or any attribute from user data without sanitization.
 12. **Accessibility:** preserve the custom element's accessible title and
     keyboard-operable controls in the demo.

@@ -2,6 +2,7 @@
   "name": "shapy-monorepo",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Monorepo for the shapy generative background Web Component.",
   "workspaces": [
     "packages/*",

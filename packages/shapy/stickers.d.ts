@@ -1,9 +1,8 @@
-export interface Sticker {
+import type { ShapyRegistryItem } from './index.js';
+
+export interface Sticker extends ShapyRegistryItem {
   key: string;
   label: string;
-  emoji?: string;
-  image?: string;
-  size?: number;
 }
 
 export interface StickerRegistryGroup {
@@ -15,4 +14,9 @@ export const STICKER_CATALOG: Sticker[];
 export const STICKER_REGISTRY: { stickers: StickerRegistryGroup };
 
 export function getRegistryData(): string;
-export function registerStickers(target?: object): { stickers: StickerRegistryGroup };
+/**
+ * Applies the sticker registry to a `shapy-background` element by setting its
+ * `registry-data` attribute. Returns the registry for reuse. Does not write to
+ * `globalThis`.
+ */
+export function registerStickers(element?: Element): { stickers: StickerRegistryGroup };

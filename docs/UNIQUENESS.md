@@ -1,8 +1,16 @@
 # How unique is a Shapy composition?
 
 A composition is the result of a seed plus the renderer settings. The counts
-below are conservative: custom colors and custom image registries add unbounded
-combinations on top.
+below are conservative: custom colors and custom media registries add further
+user-defined combinations that are not counted here. For safety, colors are
+capped at 64 tokens, registries at 20 groups, and each group at 200 items.
+
+Theming and text are presentation controls outside the composition math.
+Background/text/accent/muted/glow/scrim colors, the optional text overlay, and
+its position, scale, alignment, and font do not change which shapes are drawn or
+where they are placed. Custom registries can add user-defined emoji, image, or
+icon entries to the selectable pool; those entries are not included in the
+79-key counts below.
 
 ## 1. Seed space
 
@@ -98,7 +106,7 @@ Pausing animations doubles the runtime states:
 ≈ 3.824690 × 10^76
 ```
 
-Custom colors and custom image registries are unbounded, so the real number is
-larger. Even this conservative count is so large that two random 128-bit seeds
-producing the same composition is practically impossible. Same seed + same
-settings always reproduces the same result.
+Custom colors and custom media registries add user-defined combinations on top,
+so the real number is larger. Even this conservative count is so large that two
+random 128-bit seeds producing the same composition is practically impossible.
+Same seed + same settings always reproduces the same result.

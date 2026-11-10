@@ -2,10 +2,30 @@
 
 All notable changes to Shapy are documented here.
 
-## [Unreleased]
+## [0.2.0] - 2026-11-10
 
 ### Added
 
+- Dynamic theming attributes: `background`, `text-color`, `muted-color`,
+  `accent-color`, `glow-color`, `scrim-color`, and the `scrim` boolean.
+- Host CSS variables `--shapy-bg`, `--shapy-ink`, `--shapy-muted`,
+  `--shapy-accent`, `--shapy-glow`, and `--shapy-scrim`. Explicit attributes win
+  over variables, which win over the palette.
+- Optional text overlay with `text`/`headline`, `text-accent`,
+  `subtext`/`description`, `eyebrow`, `text-position`, `text-align`,
+  `text-scale`, `font-family`, and `font-weight`.
+- `::part(text)`, `::part(eyebrow)`, `::part(headline)`, and `::part(body)`
+  styling hooks for the text overlay.
+- Registry items can render safe inline SVG icons from path data (`icon.path` or
+  `icon.paths`, plus `viewBox`, `fill`, `stroke`, and `strokeWidth`) and accept a
+  `color` tint.
+- Relative and protocol-relative image URLs, plus AVIF data URLs, in addition to
+  http(s) and the existing safe `data:image/*` formats.
+- Element methods `setOptions()`, `getOptions()`, and `refresh()`.
+- `shapy:ready` and `shapy:change` lifecycle events with the current options.
+- Automatic accessible role/label handling for the text overlay: `group` with a
+  headline-derived label when text is visible, `img` with the standard label
+  when it is not, and host overrides preserved.
 - Custom shape picker in the Vue config page with 79 chips across geometry,
   lines, organic shapes, emoji, and stickers.
 - Single-shape and arbitrary 2/3/4/5+ shape selections via `shape-set="custom"`
@@ -28,9 +48,10 @@ All notable changes to Shapy are documented here.
 - `createSeed()` helper, exported from `shapy`, that returns a fresh
   32-character hex seed.
 - Security hardening: custom image URLs in `registry-data` are validated
-  (only `http(s)` and safe `data:image/*` allowed); `custom-colors` values are
-  validated against a CSS color allowlist; `ShapyRegistry` is no longer exposed
-  on `globalThis` (per-instance isolation only).
+  (`http(s)`, protocol-relative, relative, and safe `data:image/*` allowed);
+  `custom-colors` values are validated against a CSS color allowlist and the
+  browser's color parser; `ShapyRegistry` is no longer exposed on `globalThis`
+  (per-instance isolation only).
 - TypeScript declarations for the package API, catalog, and sticker registry.
 - Public repository README, package README, `AGENTS.md`, `docs/AI_CONTEXT.md`,
   and this changelog.
@@ -50,6 +71,15 @@ All notable changes to Shapy are documented here.
 
 ### Changed
 
+- `createShapy().mount()` now delegates option application to the element's
+  `setOptions()` method.
+- `getOptions()` returns a normalized snapshot, including an array of parsed
+  `customColors`, a parsed registry, and all color/text options.
+- Registry items without `emoji`, `image`, or `icon` are dropped instead of
+  becoming invisible shapes. If an item supplies several media fields, `emoji`
+  wins, then `icon`, then `image`.
+- `safe-area` now uses the visible text overlay's bounds when text is present.
+- Package version bumped to `0.2.0`.
 - The renderer now runs in an open Shadow DOM instead of an internal iframe.
   Renderer CSS is scoped to the shadow root, host `document`/`window` access is
   shimmed, and the renderer exposes `__SHAPY_APPLY__` / `__SHAPY_DESTROY__` on
@@ -72,8 +102,9 @@ All notable changes to Shapy are documented here.
 - The custom element registration is guarded for non-browser environments.
 - Renderer state is passed through the scoped window shim instead of being
   serialized into the template, removing the state-JSON injection surface.
-- `registerStickers()` now works with the shadow renderer because
-  `window.ShapyRegistry` proxies to `globalThis.ShapyRegistry`.
+- `registerStickers(element)` now applies the sticker registry directly to an
+  element through `registry-data`. It no longer reads or writes a global
+  registry.
 - Package metadata is publish-ready with `exports`, `types`, `files`,
   `sideEffects`, and `prepack` template generation.
 - Repository organized as a two-workspace monorepo: `packages/shapy` (the
@@ -92,7 +123,8 @@ All notable changes to Shapy are documented here.
   URL seeds are accepted up to 64 characters.
 - The Web Component now generates a fresh 128-bit seed per element instance
   when no `seed` attribute is supplied. Explicit seeds remain deterministic.
-- Vue demo "New pattern" seeds now use the full 32 hex characters (128 bits).
+- Vue demo initial and "New pattern" seeds now use the full 32 hex characters
+  (128 bits).
 - README, package README, `AGENTS.md`, and `docs/AI_CONTEXT.md` now use the
   monorepo paths and new publishing commands.
 - Vue demo dev tooling upgraded to Vite 8 and `@vitejs/plugin-vue` 6, clearing
@@ -101,6 +133,20 @@ All notable changes to Shapy are documented here.
 
 ### Fixed
 
+- Color validation now asks the browser with `CSS.supports('color', value)`, so
+  values that merely look like colors (for example `not-a-color`) are rejected.
+- `getOptions().customColors` no longer splits functional colors such as
+  `rgb(255, 0, 0)` into separate entries.
+- `setOptions()` clears the alternate attribute when setting an alias
+  (`text`/`headline`, `subtext`/`description`, `registry-data`/`registry`) so a
+  stale value cannot win the read order.
+- Host `--shapy-bg` is no longer removed when the element syncs its own
+  background attribute; the explicit attribute uses a separate internal
+  variable.
+- The text overlay resets to the default role and label when all text is
+  removed, and host-supplied `role`/`aria-label` values are preserved.
+- Renderer validation constants are declared before first use, fixing a
+  disconnect/reconnect `before initialization` error.
 - README JavaScript API examples now pass an element to `mount()` instead of a
   selector string, matching the implementation and TypeScript types.
 - README documents the Node.js 20.19+ requirement for local development.
@@ -124,6 +170,35 @@ All notable changes to Shapy are documented here.
 - Root demo and package renderer sources are back in sync.
 - Vue demo package imports no longer depend on local `packages/` source aliases;
   they resolve through the workspace package exports.
+- Both `npm run dev` and `npm run dev:example` now serve
+  `/examples/minimal.html` directly. The Vue demo dev server intercepts the
+  example paths before Vue Router's SPA fallback, and the root `index.html`
+  placeholder keeps `npm run dev:example` rooted at the repository. The example
+  background renders with no Vue Router warning.
+- The generated `examples/standalone.html` demo now renders its background when
+  no sticker registry is supplied; `getPool()` no longer dereferences a null
+  registry.
+- Invalid numeric attributes no longer produce `NaN` or blank the background.
+  `density` (20–100), `scale` (60–140), `speed` (50–200), and `move` (30–200)
+  are finite-number checked and clamped; invalid values use their defaults.
+  This also prevents extreme values from generating unbounded shape counts.
+- `registry-data` is sanitized before rendering: non-object groups/items are
+  dropped, groups are capped at 20 and items at 200, and item `size`, `weight`,
+  and `ratio` values are finite-number checked and clamped. Malformed registry
+  data can no longer crash or blank the renderer.
+- The package element now removes the standalone demo's hidden topbar, control
+  panel, footer, and toast from its shadow root. Background-only consumers no
+  longer carry unused demo controls or duplicate element IDs.
+- URL seeds are no longer decoded twice. A seed containing a literal `%` (for
+  example `?seed=100%`) no longer throws or breaks the standalone renderer.
+- `safe-area` now compares the text region against the host's position, so the
+  dimmed area is correct when `<shapy-background>` is used in a smaller
+  container instead of a full-page background.
+- Live color updates now respect `prefers-reduced-motion: reduce`, matching the
+  existing CSS animation opt-out.
+- Demo controls now expose selection state: the pause button and shape chips use
+  `aria-pressed`, group-only buttons have accessible labels, and toasts are
+  announced with `role="status"`.
 
 ## [0.1.0] — 2026-11-09
 
