@@ -1,6 +1,8 @@
 # Shapy
 
 [![CI](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml/badge.svg)](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/hemant-rao/Shapy?style=flat&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
 
 **Seedable generative shape backgrounds for the web.**
 
@@ -12,6 +14,27 @@ any framework that can render a custom element.
 
 > **New here?** Start with the [step-by-step guide](./docs/GETTING_STARTED.md).
 > It takes you from an empty folder to a working background in a few minutes.
+
+> **Sponsored by [Odio Book](https://odiobook.com)** — the all-in-one AI video &
+> audio studio: AI video editing, auto subtitles, scene detection, voice
+> generation and text-to-speech, all in the browser. Odio Book funds the time
+> that goes into this package. **[Try it free →](https://odiobook.com)**
+
+---
+
+## Contents
+
+| | |
+| --- | --- |
+| [Why Shapy?](#why-shapy) · [Try it in 2 minutes](#try-it-in-2-minutes) | What it is and how to run it |
+| [Use it in your project](#use-it-in-your-project) · [Attributes](#attributes) | Install and configure |
+| [Choosing shapes](#choosing-shapes) · [Custom media](#custom-media) | Compose the pattern |
+| [Text overlay](#text-overlay) · [Theming and CSS hooks](#theming-and-css-hooks) | Complete heroes |
+| [JavaScript API](#javascript-api) · [Vue 3](#vue-3) | Programmatic control |
+| [Local development](#local-development) · [Project structure](#project-structure) · [Publishing](#publishing) | Work on the repo |
+| [Support this project](#support-this-project) · [Sponsor: Odio Book](#sponsor-odio-book) | Sponsor the maintenance |
+
+---
 
 ## Why Shapy?
 
@@ -603,9 +626,10 @@ Useful commands:
 ```bash
 npm run dev            # start the Vue demo with Vite
 npm run dev:example    # start the minimal HTML example
+npm test               # run the Node test suite
 npm run build          # build the Vue demo
 npm run check:repo     # check docs, exports, and generated files
-npm run verify         # regenerate, check, build, and dry-run the package
+npm run verify         # regenerate, test, check, build, and dry-run the package
 npm run pack:shapy     # npm pack the core package
 npm run pack:check     # dry-run the package tarball
 ```
@@ -622,6 +646,8 @@ Shapy-code/
 │     ├─ src/catalog.js        Core shape + emoji catalog
 │     ├─ src/stickers.js       Optional sticker registry
 │     ├─ src/index.js          Public createShapy() API
+│     ├─ index.d.ts            Public TypeScript declarations
+│     ├─ README.md             npm package documentation
 │     └─ scripts/              Package template build script
 ├─ apps/
 │  └─ demo/                    Vue 3 background-only + config demo
@@ -631,12 +657,22 @@ Shapy-code/
 ├─ scripts/
 │  ├─ sync-standalone.mjs      Copy renderer source to examples/
 │  └─ check-repo.mjs           Docs, package, and generated-file checks
+├─ tests/
+│  └─ package.test.mjs         Node test suite for the package surface
 ├─ docs/
 │  ├─ GETTING_STARTED.md       Step-by-step beginner guide
 │  ├─ UNIQUENESS.md            Full composition-count math
 │  └─ AI_CONTEXT.md            Architecture notes for future work
-├─ .github/workflows/ci.yml    CI
+├─ .github/
+│  ├─ FUNDING.yml              GitHub Sponsors metadata
+│  ├─ CODEOWNERS               Maintainer review ownership
+│  ├─ ISSUE_TEMPLATE/          Bug and feature request forms
+│  ├─ PULL_REQUEST_TEMPLATE.md Pull request checklist
+│  └─ workflows/ci.yml         CI
 ├─ CHANGELOG.md                Change history
+├─ CODE_OF_CONDUCT.md          Community standards
+├─ CONTRIBUTING.md             Contribution guide
+├─ SECURITY.md                 Security policy
 ├─ AGENTS.md                   Rules for AI-assisted changes
 ├─ README.md                   Public documentation
 ├─ package.json                Workspace root and scripts
@@ -647,12 +683,22 @@ Shapy-code/
 
 ```bash
 npm run verify
+npm run pack:check
 npm run publish:shapy
 ```
 
-Before publishing, bump versions, update `CHANGELOG.md`, run the demo and
-the manual checks in [`AGENTS.md`](./AGENTS.md), and review the dry-run output.
+Before publishing:
+
+1. Bump the version in `packages/shapy/package.json`.
+2. Update `CHANGELOG.md`.
+3. Run `npm run verify` and confirm the test suite passes.
+4. Run the demo and the manual checks in [`AGENTS.md`](./AGENTS.md).
+5. Review the dry-run file list and tarball size.
+6. Confirm the working tree is clean.
+
 Run `npm publish` only after explicit approval and a successful `npm login`.
+The package `prepack` script rebuilds `shapy-template.js` from the renderer
+source, so a stale generated file cannot be published.
 
 ## Troubleshooting
 
@@ -703,6 +749,60 @@ exposes `role="img"` and an overridable `aria-label` for accessibility, switches
 to `role="group"` when text is visible, and respects
 `prefers-reduced-motion: reduce` by disabling shape animations.
 
+## Community
+
+- [Contributing](./CONTRIBUTING.md) — local setup, rules, and the pull request
+  checklist.
+- [Security policy](./SECURITY.md) — private vulnerability reporting and the
+  security model.
+- [Code of conduct](./CODE_OF_CONDUCT.md) — the standards for this community.
+- [Issues](https://github.com/hemant-rao/Shapy/issues) — bug reports and feature
+  requests.
+- [Changelog](./CHANGELOG.md) — every user-visible change.
+
+## Support this project
+
+Shapy is free and MIT-licensed, built and maintained by
+[Hemant Rao](https://github.com/hemant-rao) in his own time. If it saved you a
+day of work — or your company ships it in production — you can back its
+maintenance:
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hemant-rao)
+&nbsp;
+[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/Shapy?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
+
+**[Become a sponsor](https://github.com/sponsors/hemant-rao)** — one-time or
+monthly, any amount.
+
+Sponsorship funds bug fixes, browser testing, and keeping the docs honest.
+Starring the repo and reporting issues helps just as much.
+
+## Sponsor: Odio Book
+
+Maintenance of this package is sponsored by **[Odio Book](https://odiobook.com)**,
+built by the same developer.
+
+**Odio Book is an all-in-one AI video & audio studio that runs in your browser** —
+describe the edit in plain English and it happens. No install, no watermarks,
+and your files never leave the tab.
+
+| | |
+| --- | --- |
+| **[AI Video Editor](https://odiobook.com)** | Plain-English editing instead of a timeline |
+| **[AI Subtitles](https://odiobook.com)** | Auto-generate and burn in subtitles |
+| **[AI Scene Detection](https://odiobook.com)** | Find cuts, export clips, chapters or a cut list |
+| **[AI Voice Generator](https://odiobook.com)** | Natural speech in 7 languages, plus text-to-speech |
+| **[Voice Studio](https://odiobook.com)** | Multi-character scripts into finished audio |
+| **Manual toolkit** | Trim, merge, convert, resize, compress, stabilize, add music |
+
+**[Start free at odiobook.com](https://odiobook.com)**
+
+If this package saved you time, the best thank-you is giving Odio Book a spin —
+it is what keeps this library maintained.
+
+More packages by the same author:
+[universal-toast-message](https://www.npmjs.com/package/universal-toast-message).
+
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT © [Hemant Rao](https://github.com/hemant-rao). See [LICENSE](./LICENSE).

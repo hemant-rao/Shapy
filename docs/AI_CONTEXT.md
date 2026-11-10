@@ -24,7 +24,25 @@ its public exports, including the `shapy/stickers` subpath; there are no Vite
 source aliases.
 
 The package is pre-publish. The npm name `shapy` is available as of the last
-check. The public repository is `https://github.com/hemant-rao/Shapy`.
+check. The public repository is `https://github.com/hemant-rao/Shapy`. The
+version is `1.0.0`; do not bump it until the owner explicitly publishes or asks
+for a version change.
+
+## Project identity and support
+
+- **Author and maintainer:** Hemant Rao
+  (<https://github.com/hemant-rao>).
+- **Repository:** <https://github.com/hemant-rao/Shapy>.
+- **Sponsor:** Odio Book (<https://odiobook.com>).
+- **Funding:** GitHub Sponsors
+  (<https://github.com/sponsors/hemant-rao>).
+- **License:** MIT, copyright Hemant Rao.
+- **Package:** `shapy`, version `1.0.0`, zero runtime dependencies.
+
+Keep the author, sponsor, and funding text consistent across `README.md`,
+`packages/shapy/README.md`, `packages/shapy/package.json`, `package.json`,
+`LICENSE`, `packages/shapy/LICENSE`, `.github/FUNDING.yml`, `CONTRIBUTING.md`,
+`SECURITY.md`, and `CODE_OF_CONDUCT.md`.
 
 ## Repository map
 
@@ -39,8 +57,16 @@ check. The public repository is `https://github.com/hemant-rao/Shapy`.
 | `packages/shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
 | `packages/shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
 | `scripts/sync-standalone.mjs` | Copies the renderer source to `examples/standalone.html`. |
-| `scripts/check-repo.mjs` | Checks docs links, package exports, generated files, and stale paths. |
+| `scripts/check-repo.mjs` | Checks docs links, package exports, generated files, stale paths, author/sponsor metadata, and required community files. |
+| `tests/package.test.mjs` | Node test suite for seed generation, catalog counts, sticker serialization, package exports, metadata, and documentation attribution. |
 | `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy/stickers`. |
+| `CONTRIBUTING.md` | Contribution workflow, local setup, code rules, testing, and release checklist. |
+| `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model. |
+| `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 community standards. |
+| `.github/FUNDING.yml` | GitHub Sponsors metadata. |
+| `.github/CODEOWNERS` | Maintainer review ownership. |
+| `.github/ISSUE_TEMPLATE/` | Bug report, feature request, and contact-link forms. |
+| `.github/PULL_REQUEST_TEMPLATE.md` | Pull request checklist. |
 | `apps/demo/src/pages/Home.vue` | Background-only demo. |
 | `apps/demo/src/pages/Config.vue` | Full control panel + shape picker. |
 | `apps/demo/src/App.vue` | Floating navigation shell. |
@@ -327,10 +353,21 @@ npm run build:template
 
 This writes `packages/shapy/src/shapy-template.js` and syncs
 `examples/standalone.html`. Both files are generated; edit only the package
-renderer source. `npm run verify` regenerates both, runs repository checks,
-builds the Vue demo, and runs `npm pack --dry-run` for the package.
+renderer source. `npm run verify` regenerates both, runs repository checks, runs
+the Node test suite, builds the Vue demo, and runs `npm pack --dry-run` for the
+package.
 
 ## Testing
+
+Run the zero-dependency Node test suite:
+
+```bash
+npm test
+```
+
+It covers seed generation, catalog counts, sticker serialization, package
+exports, package metadata, and documentation attribution. It does not render
+the Web Component.
 
 The demo runs with Vite at the URL it prints (usually
 `http://localhost:5173`) while developing. Both `npm run dev` and
@@ -339,7 +376,7 @@ before Vue Router's SPA fallback.
 
 Playwright scripts used during development live in a local temp folder outside
 the repository. Point the scripts at any Chromium/Chrome executable available on
-your machine.
+your machine. Run the browser matrix at least twice before a release.
 
 Checks that matter:
 
@@ -376,8 +413,11 @@ Checks that matter:
 1. **Shadow DOM is required.** The renderer needs Custom Elements and
    `attachShadow`; there is no light-DOM fallback. If Shadow DOM is unavailable,
    the component renders nothing.
-2. **No automated test suite.** Verification is currently manual/Playwright.
-3. **Publish pending approval.** Version `0.2.0` is packaged and verified but
+2. **Browser behavior is not yet covered by committed browser tests.** The Node
+   test suite covers the package surface; rendering, theming, text, and registry
+   behavior are verified with a Playwright matrix that currently lives outside
+   the repository.
+3. **Publish pending approval.** Version `1.0.0` is packaged and verified but
    has not been pushed to npm. Publish only after explicit approval and a
    successful `npm login`.
 4. **Renderer globals are shimmed, not fully isolated.** `window` and `document`
@@ -388,6 +428,7 @@ Checks that matter:
 ## Next recommended work
 
 1. Run `npm run verify` after each change and inspect the dry-run file lists.
-2. Add a small automated Playwright test suite if the project grows.
+2. Add the Playwright browser matrix to the repository and CI if CI runtime
+   allows it.
 3. Consider exposing the new theming and text controls in the Vue config demo;
    the package API already supports them.

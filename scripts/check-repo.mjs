@@ -11,10 +11,13 @@ const docs = [
   'README.md',
   'packages/shapy/README.md',
   'AGENTS.md',
+  'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'SECURITY.md',
+  'CODE_OF_CONDUCT.md',
   'docs/GETTING_STARTED.md',
   'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',
-  'CHANGELOG.md',
 ];
 
 function ok(message) {
@@ -92,6 +95,63 @@ checkGroup(`${pkgRel}: files, exports, and ./stickers export are valid`, () => {
   if (!pkg.exports['./stickers']) bad(`${pkgRel}: missing ./stickers export`);
 });
 
+checkGroup(`${pkgRel}: author, funding, version, and license metadata are complete`, () => {
+  const author = typeof pkg.author === 'string' ? pkg.author : pkg.author?.name;
+
+  if (author !== 'Hemant Rao') bad(`${pkgRel}: author must be Hemant Rao`);
+  if (pkg.funding?.url !== 'https://github.com/sponsors/hemant-rao') {
+    bad(`${pkgRel}: funding must point to GitHub Sponsors`);
+  }
+  if (pkg.license !== 'MIT') bad(`${pkgRel}: license must be MIT`);
+  if (pkg.version !== '1.0.0') {
+    bad(`${pkgRel}: version must remain 1.0.0 until the owner publishes`);
+  }
+  if (!pkg.exports?.['./package.json']) {
+    bad(`${pkgRel}: missing ./package.json export`);
+  }
+
+  const lock = JSON.parse(read('package-lock.json'));
+  if (lock.packages?.['packages/shapy']?.version !== pkg.version) {
+    bad('package-lock.json: packages/shapy version does not match package.json');
+  }
+});
+
+checkGroup('author, sponsor, and funding attribution is consistent', () => {
+  const docsWithAttribution = [
+    'README.md',
+    'packages/shapy/README.md',
+    'CONTRIBUTING.md',
+    'SECURITY.md',
+    'CODE_OF_CONDUCT.md',
+    'docs/GETTING_STARTED.md',
+    'docs/UNIQUENESS.md',
+    'docs/AI_CONTEXT.md',
+  ];
+
+  for (const doc of docsWithAttribution) {
+    const text = read(doc);
+
+    if (!/Hemant Rao/.test(text)) bad(`${doc}: missing author attribution`);
+    if (!/Odio Book/.test(text)) bad(`${doc}: missing sponsor attribution`);
+  }
+
+  for (const readme of ['README.md', 'packages/shapy/README.md']) {
+    if (!/https:\/\/github\.com\/sponsors\/hemant-rao/.test(read(readme))) {
+      bad(`${readme}: missing GitHub Sponsors link`);
+    }
+  }
+
+  for (const license of ['LICENSE', 'packages/shapy/LICENSE']) {
+    if (!/Copyright \(c\) 2026 Hemant Rao/.test(read(license))) {
+      bad(`${license}: copyright holder must be Hemant Rao`);
+    }
+  }
+
+  if (!/github: \[hemant-rao\]/.test(read('.github/FUNDING.yml'))) {
+    bad('.github/FUNDING.yml: missing GitHub Sponsors entry');
+  }
+});
+
 const rendererSource = read('packages/shapy/src/shapy-index.html');
 
 checkGroup('examples/standalone.html matches the renderer source', () => {
@@ -113,12 +173,22 @@ const requiredFiles = [
   'LICENSE',
   'AGENTS.md',
   'CHANGELOG.md',
+  'CONTRIBUTING.md',
+  'SECURITY.md',
+  'CODE_OF_CONDUCT.md',
   'docs/GETTING_STARTED.md',
   'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',
+  '.github/FUNDING.yml',
+  '.github/CODEOWNERS',
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  '.github/ISSUE_TEMPLATE/bug_report.yml',
+  '.github/ISSUE_TEMPLATE/feature_request.yml',
+  '.github/ISSUE_TEMPLATE/config.yml',
   '.github/workflows/ci.yml',
   'package.json',
   'package-lock.json',
+  'tests/package.test.mjs',
   'examples/minimal.html',
   'examples/standalone.html',
   'apps/demo/package.json',
@@ -140,6 +210,9 @@ const currentDocs = [
   'README.md',
   'packages/shapy/README.md',
   'AGENTS.md',
+  'CONTRIBUTING.md',
+  'SECURITY.md',
+  'CODE_OF_CONDUCT.md',
   'docs/GETTING_STARTED.md',
   'docs/UNIQUENESS.md',
   'docs/AI_CONTEXT.md',

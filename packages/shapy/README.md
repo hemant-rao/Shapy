@@ -11,6 +11,27 @@ overlay, so a single element can be a complete hero background.
 > It covers installation, your first background, common recipes, and
 > troubleshooting.
 
+> **Sponsored by [Odio Book](https://odiobook.com)** — the all-in-one AI video &
+> audio studio: AI video editing, auto subtitles, scene detection, voice
+> generation and text-to-speech, all in the browser. Odio Book funds the time
+> that goes into this package. **[Try it free →](https://odiobook.com)**
+
+---
+
+## Contents
+
+| | |
+| --- | --- |
+| [Install](#install) · [Quick start](#quick-start) | Get running in 2 minutes |
+| [What you can control](#what-you-can-control) · [Attributes](#attributes) | Every option and default |
+| [Text overlay](#text-overlay) · [Theming](#theming) | Complete heroes |
+| [Custom shapes, images, and icons](#custom-shapes-images-and-icons) · [Optional stickers](#optional-stickers) | Your own media |
+| [JavaScript API](#javascript-api) · [TypeScript](#typescript) | Programmatic control |
+| [Troubleshooting](#troubleshooting) | Fixes |
+| [Support this project](#support-this-project) · [Sponsor: Odio Book](#sponsor-odio-book) | Sponsor the maintenance |
+
+---
+
 ## Install
 
 ```bash
@@ -526,6 +547,15 @@ Add the `isCustomElement` option shown in the
 
 Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
 
+## Package exports
+
+| Import | What you get |
+| --- | --- |
+| `shapy` | Registers `<shapy-background>`, and exports `createShapy()`, `createSeed()`, and the catalog helpers. |
+| `shapy/element` | Registers `<shapy-background>` only. |
+| `shapy/catalog` | Shape and emoji catalog data without registering the element. |
+| `shapy/stickers` | Sticker catalog, serializable registry, and helpers. |
+
 ## Documentation
 
 - [Step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md)
@@ -535,7 +565,53 @@ Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
 - [Custom shapes, images, and icons](#custom-shapes-images-and-icons)
 - [JavaScript API](#javascript-api)
 - [Full repository documentation](https://github.com/hemant-rao/Shapy#readme)
+- [Contributing](https://github.com/hemant-rao/Shapy/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md)
+- [Code of conduct](https://github.com/hemant-rao/Shapy/blob/main/CODE_OF_CONDUCT.md)
+
+## Support this project
+
+`shapy` is free and MIT-licensed, built and maintained by
+[Hemant Rao](https://github.com/hemant-rao) in his own time. If it saved you a
+day of work — or your company ships it in production — you can back its
+maintenance:
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hemant-rao)
+&nbsp;
+[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/Shapy?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
+
+**[Become a sponsor](https://github.com/sponsors/hemant-rao)** — one-time or
+monthly, any amount.
+
+Sponsorship funds bug fixes, browser testing, and keeping the docs honest.
+Starring the repo and reporting issues helps just as much.
+
+## Sponsor: Odio Book
+
+Maintenance of this package is sponsored by **[Odio Book](https://odiobook.com)**,
+built by the same developer.
+
+**Odio Book is an all-in-one AI video & audio studio that runs in your browser** —
+describe the edit in plain English and it happens. No install, no watermarks,
+and your files never leave the tab.
+
+| | |
+| --- | --- |
+| **[AI Video Editor](https://odiobook.com)** | Plain-English editing instead of a timeline |
+| **[AI Subtitles](https://odiobook.com)** | Auto-generate and burn in subtitles |
+| **[AI Scene Detection](https://odiobook.com)** | Find cuts, export clips, chapters or a cut list |
+| **[AI Voice Generator](https://odiobook.com)** | Natural speech in 7 languages, plus text-to-speech |
+| **[Voice Studio](https://odiobook.com)** | Multi-character scripts into finished audio |
+| **Manual toolkit** | Trim, merge, convert, resize, compress, stabilize, add music |
+
+**[Start free at odiobook.com](https://odiobook.com)**
+
+If this package saved you time, the best thank-you is giving Odio Book a spin —
+it is what keeps this library maintained.
+
+More packages by the same author:
+[universal-toast-message](https://www.npmjs.com/package/universal-toast-message).
 
 ## License
 
-MIT
+MIT © [Hemant Rao](https://github.com/hemant-rao). See [LICENSE](./LICENSE).

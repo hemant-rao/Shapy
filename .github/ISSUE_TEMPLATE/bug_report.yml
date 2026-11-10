@@ -1,0 +1,87 @@
+name: Bug report
+description: Report a reproducible problem with Shapy.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please include enough detail
+        to reproduce it without guessing. Security issues must be reported
+        privately — see [SECURITY.md](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Shapy version
+      description: The version shown in `package.json`, or the exact Git commit.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Rendering / shapes
+        - Theming / colors
+        - Text overlay
+        - Custom media / registry
+        - Web Component API
+        - TypeScript types
+        - Demo site
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome / Chromium
+        - Edge
+        - Firefox
+        - Safari
+        - Multiple browsers
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      description: Include the exact behavior you saw and any console output.
+      placeholder: The background renders, but the text overlay is missing.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: |
+        A CodePen, StackBlitz, repository, or a short HTML snippet. Include the
+        element markup, the options passed to `setOptions()`, and any custom
+        registry data.
+      render: html
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Screenshots, screen recordings, or anything else that helps.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the documentation.
+          required: true
+        - label: I can reproduce this with the latest released version.
+          required: true

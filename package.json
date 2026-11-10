@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "description": "Monorepo for the shapy generative background Web Component.",
+  "author": {
+    "name": "Hemant Rao",
+    "url": "https://github.com/hemant-rao"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/hemant-rao"
+  },
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -14,7 +22,8 @@
     "build": "npm --workspace @shapy/demo run build",
     "build:template": "npm --workspace shapy run build:template && node scripts/sync-standalone.mjs",
     "check:repo": "node scripts/check-repo.mjs",
-    "verify": "npm run build:template && npm run check:repo && npm run build && npm run pack:check",
+    "test": "node --test tests/package.test.mjs",
+    "verify": "npm run build:template && npm run check:repo && npm test && npm run build && npm run pack:check",
     "pack:shapy": "npm pack --workspace shapy",
     "pack:check": "npm run pack:shapy -- --dry-run",
     "publish:shapy": "npm publish --workspace shapy"
@@ -22,6 +31,13 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hemant-rao/Shapy.git"
+  },
+  "homepage": "https://github.com/hemant-rao/Shapy#readme",
+  "bugs": {
+    "url": "https://github.com/hemant-rao/Shapy/issues"
+  },
+  "engines": {
+    "node": ">=20.19"
   },
   "license": "MIT"
 }

@@ -739,7 +739,7 @@ Shapy is designed to be safe by default:
 ### Safe custom image example
 
 ```js
-import { STICKER_CATALOG } from 'shapy/stickers';
+const background = document.querySelector('shapy-background');
 
 const registry = {
   stickers: {
@@ -760,3 +760,13 @@ Only `safe-img` will render; `bad-img` is dropped because its URL is unsafe.
 
 If something is unclear, open an issue:
 <https://github.com/hemant-rao/Shapy/issues>.
+
+## Support Shapy
+
+Shapy is free and MIT-licensed, built and maintained by
+[Hemant Rao](https://github.com/hemant-rao). If it saved you time, you can
+[sponsor its maintenance](https://github.com/sponsors/hemant-rao) or try
+[Odio Book](https://odiobook.com), the project's sponsor.
+
+More packages by the same author:
+[universal-toast-message](https://www.npmjs.com/package/universal-toast-message).

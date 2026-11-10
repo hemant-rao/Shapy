@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/hemant-rao/Shapy#readme
+    about: Install, attributes, theming, custom media, and the JavaScript API.
+  - name: Getting started guide
+    url: https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md
+    about: A step-by-step guide from an empty folder to a working background.
+  - name: Sponsor Shapy
+    url: https://github.com/sponsors/hemant-rao
+    about: Support the maintenance of Shapy with a one-time or monthly sponsorship.

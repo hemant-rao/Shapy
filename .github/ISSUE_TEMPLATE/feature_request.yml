@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest a new option, shape, integration, or documentation improvement.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Shapy is intentionally small and zero-dependency. Explain the problem
+        first, then the smallest API or documentation change that would solve it.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New attribute or option
+        - New shape or media type
+        - Theming / text overlay
+        - Web Component API
+        - TypeScript types
+        - Demo site
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case, not only the proposed API.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Show the API you would like to write, if you have one.
+      render: js
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Existing attributes, CSS variables, or workarounds you tried.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the documentation.
+          required: true
+        - label: This request keeps Shapy zero-dependency and browser-only.
+          required: true

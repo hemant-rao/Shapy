@@ -110,3 +110,9 @@ Custom colors and custom media registries add user-defined combinations on top,
 so the real number is larger. Even this conservative count is so large that two
 random 128-bit seeds producing the same composition is practically impossible.
 Same seed + same settings always reproduces the same result.
+
+---
+
+Shapy is maintained by [Hemant Rao](https://github.com/hemant-rao) and sponsored
+by [Odio Book](https://odiobook.com). If this page helped, consider
+[sponsoring the project](https://github.com/sponsors/hemant-rao).

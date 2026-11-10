@@ -1,7 +1,15 @@
 {
   "name": "shapy",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Seedable generative shape backgrounds as a zero-dependency Web Component.",
+  "author": {
+    "name": "Hemant Rao",
+    "url": "https://github.com/hemant-rao"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/hemant-rao"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hemant-rao/Shapy.git",
@@ -35,7 +43,8 @@
       "types": "./stickers.d.ts",
       "import": "./src/stickers.js",
       "default": "./src/stickers.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src/shapy-bg.js",
@@ -60,13 +69,19 @@
   "keywords": [
     "shapy",
     "generative",
+    "generative-art",
     "background",
+    "background-generator",
+    "hero-background",
     "shapes",
     "web-component",
+    "web-components",
     "custom-element",
+    "custom-elements",
     "emoji",
     "seed",
-    "animated-background"
+    "animated-background",
+    "typescript"
   ],
   "license": "MIT",
   "engines": {

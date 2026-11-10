@@ -55,6 +55,15 @@ Read it before touching code.
     - Never set `img.src` or any attribute from user data without sanitization.
 12. **Accessibility:** preserve the custom element's accessible title and
     keyboard-operable controls in the demo.
+13. **Keep project identity consistent.** The author is Hemant Rao, the sponsor
+    is Odio Book (`https://odiobook.com`), and funding is GitHub Sponsors
+    (`https://github.com/sponsors/hemant-rao`). Keep those names, links, and the
+    MIT copyright line identical across both READMEs, both `LICENSE` files,
+    both `package.json` files, `.github/FUNDING.yml`, `CONTRIBUTING.md`,
+    `SECURITY.md`, and `CODE_OF_CONDUCT.md`. Do not remove the sponsor sections.
+14. **Version policy:** the package version is `1.0.0` until the owner explicitly
+    publishes or asks for a bump. Do not bump it during documentation or
+    production-readiness work.
 
 ## Source of truth
 
@@ -72,14 +81,20 @@ Read it before touching code.
 | Demo background page | `apps/demo/src/pages/Home.vue` |
 | Beginner guide | `docs/GETTING_STARTED.md` |
 | Composition math | `docs/UNIQUENESS.md` |
-| Docs | `README.md`, `docs/`, `CHANGELOG.md` |
+| Tests | `tests/package.test.mjs` |
+| Contribution guide | `CONTRIBUTING.md` |
+| Security policy | `SECURITY.md` |
+| Community standards | `CODE_OF_CONDUCT.md` |
+| Sponsorship metadata | `.github/FUNDING.yml` |
+| Docs | `README.md`, `packages/shapy/README.md`, `docs/`, `CHANGELOG.md` |
 
 ## Change workflow
 
 1. Inspect the relevant code and current behavior.
 2. Write the smallest possible change.
 3. Run `npm run verify` to regenerate generated files, check docs and package
-   consistency, build the demo, and dry-run the package.
+   consistency, run the Node test suite, build the demo, and dry-run the
+   package.
 4. Run the demo and verify visually and programmatically:
    - Desktop `1350x800`
    - Mobile `390x844`
@@ -108,9 +123,11 @@ Read it before touching code.
 
 ## Publishing checklist
 
-- [ ] Version bumped in `packages/shapy/package.json`.
+- [ ] Version is `1.0.0` unless the owner explicitly approved a bump.
 - [ ] `CHANGELOG.md` updated.
+- [ ] `npm test` succeeds.
 - [ ] `npm run verify` succeeds.
-- [ ] Tarball contents reviewed.
+- [ ] Tarball contents and size reviewed.
+- [ ] Working tree is clean.
 - [ ] `npm run publish:shapy` run only after explicit user approval and a
       successful `npm login`.

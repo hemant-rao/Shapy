@@ -2,6 +2,44 @@
 
 All notable changes to Shapy are documented here.
 
+## [1.0.0] - 2026-11-10
+
+The first production-ready release. The package is not published yet; 1.0.0 is
+the version that will be published after the final manual review.
+
+### Added
+
+- Sponsorship and support sections across the repository README, package
+  README, contributing guide, and security policy.
+- Odio Book sponsor attribution and a GitHub Sponsors funding link.
+- Author, funding, homepage, bugs, and Node engine metadata in the package and
+  workspace manifests.
+- Community health files: `CONTRIBUTING.md`, `SECURITY.md`,
+  `CODE_OF_CONDUCT.md`, `.github/FUNDING.yml`, `.github/CODEOWNERS`, issue
+  templates, and a pull request template.
+- A zero-dependency Node test suite in `tests/package.test.mjs` covering seed
+  generation, catalog counts, sticker serialization, package exports, metadata,
+  and documentation attribution.
+- A `./package.json` export so tools can read package metadata.
+- Contents tables and package-export documentation in both READMEs.
+
+### Changed
+
+- Both READMEs now follow the same structure and voice as the
+  `universal-toast-message` documentation: sponsor banner, contents table,
+  support section, sponsor section, and author footer.
+- The license copyright holder is now Hemant Rao.
+- `npm run verify` runs the Node test suite before building and packing.
+- CI runs `npm test` as part of verification.
+- Security policy supported versions now track the `1.0.x` line.
+
+### Fixed
+
+- Removed an unused import from the safe custom image example in the getting
+  started guide.
+- Corrected the version and documentation metadata so the package, lockfile,
+  changelog, and security policy agree.
+
 ## [0.2.0] - 2026-11-10
 
 ### Added
