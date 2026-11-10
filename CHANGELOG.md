@@ -23,7 +23,9 @@ the version that will be published after the final manual review.
 - Fast `shapy-render` tests in `tests/render.test.mjs` covering invalid option
   rejection, CLI help/version/unknown-flag behavior, and output-format inference.
 - An opt-in export E2E suite in `tests/render.e2e.test.mjs` covering loop-boundary
-  frame equality, WebM output, RGBA alpha PNG, and poster generation.
+  frame equality (including `loop=10` at `speed=200`), WebM, MP4 when ffmpeg
+  provides `libx264`, RGBA alpha PNG, alpha WebM when PNG decoding is available,
+  and poster generation.
 - `engineVersion` in the `shapy-render` result, so captured output records the
   core `SHAPY_ENGINE_VERSION` that produced it.
 - A manual `workflow_dispatch` CI job for the render E2E suite with Chromium and
@@ -69,6 +71,13 @@ the version that will be published after the final manual review.
   changelog, and security policy agree.
 - `shapy-render` now forwards the top-level `loop` option/`--loop` flag to the
   element, so rendered clips actually use the requested loop period.
+- Loop mode keeps full precision when formatting quantized durations. A
+  `loop=10`, `speed=200` clip now closes at exactly 10 seconds instead of
+  cycling at `1.67s` (5.99 periods) because `toFixed(2)` used to round
+  `10/6`.
+- Frozen captures disable `will-change: transform` on shape layers, so `seek()`
+  paints the requested frame instead of a stale compositor layer. This closes
+  the loop seam for seeds that place a shape at the viewport edge.
 - Alpha captures hide the solid background, scrim, and grain layers instead of
   compositing them into the transparent PNG.
 - `shapy-render` validates the poster extension before capture, so invalid

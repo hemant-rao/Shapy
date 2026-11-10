@@ -60,7 +60,7 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 | `scripts/check-repo.mjs` | Checks docs links, package exports, generated files, stale paths, author/sponsor metadata, and required community files. |
 | `tests/package.test.mjs` | Core package tests for seed generation, catalog counts, sticker serialization, package exports, metadata, and documentation attribution. |
 | `tests/render.test.mjs` | Fast `shapy-render` tests for input rejection, CLI behavior, and format inference. |
-| `tests/render.e2e.test.mjs` | Opt-in Playwright/ffmpeg test for loop closure, WebM, alpha PNG, and poster output. |
+| `tests/render.e2e.test.mjs` | Opt-in Playwright/ffmpeg test for loop closure (including high-speed loops and compositor seeks), WebM, MP4, alpha PNG, alpha WebM, and poster output. |
 | `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy/stickers`. |
 | `CONTRIBUTING.md` | Contribution workflow, local setup, code rules, testing, and release checklist. |
 | `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model. |
@@ -349,6 +349,11 @@ or an array through `setOptions()`. Values are percentages of the host box from
 When `loop` is active, `loopDuration()` recomputes every adjusted duration so the
 loop period is an exact multiple of the duration. Alternate animations use an even
 number of cycles, so the direction at the loop boundary matches the start.
+`formatSeconds()` keeps full precision in loop mode: rounding a quantized
+duration (for example `10/6` at `loop=10`, `speed=200`) to two decimals would
+leave 5.99 cycles instead of 6 and reopen the seam. Frozen timelines also set
+`will-change: auto` on `.shape__inner`, because a promoted compositor layer can
+keep the pre-seek raster after `seek()` pauses and repositions the animation.
 
 ## Deterministic timeline
 
@@ -360,6 +365,8 @@ The timeline contract is:
   `seek(t)` is the imperative equivalent without rewriting the attribute.
 - `loop="p"` quantizes animation durations to divide `p` exactly and disables
   live mutations. Bare `loop` reads as 10 seconds. `seek()` wraps into `[0, p)`.
+  Quantized durations keep full precision, and `seek()` drops compositor layer
+  promotion while frozen, so the frame at `p` matches the frame at `0`.
 - `seek(null)` clears the frozen state. If `time` is unset and `live` is on, live
   updates resume.
 - `paused` alone pauses animations but does not disable live mutations.

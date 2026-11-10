@@ -70,6 +70,9 @@ For repeatable output:
 3. Wait for `document.fonts.ready` before capturing text.
 4. Use `seek(t)` for every frame instead of relying on wall-clock time.
 5. Use `loop` when the clip must close seamlessly; `seek()` wraps at the period.
+   Loop durations keep full precision after quantization, and frozen captures
+   disable compositor layer promotion, so the frame at the period end matches the
+   frame at the start.
 
 `time` and `loop` also disable live mutations. `paused` alone does not, so prefer
 `live="off"` or `time` for capture work.

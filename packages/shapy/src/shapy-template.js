@@ -597,6 +597,10 @@ export const SHAPY_HTML = `<!doctype html>
 
   .app.is-paused .shape__inner { animation-play-state: paused; }
   .app.is-frozen .shape__inner { animation-play-state: paused !important; }
+  /* Seeking pauses and repositions animations through the Web Animations API.
+     A cached compositor layer (will-change: transform) can keep the pre-seek
+     raster for one frame, so frozen captures would not close the loop. */
+  .app.is-frozen .shape__inner { will-change: auto !important; }
 
   @keyframes float {
     0%   { transform: translate3d(0, 0, 0) rotate(var(--r)) scale(1); }
@@ -1627,6 +1631,13 @@ export const SHAPY_HTML = `<!doctype html>
       return period / divisions;
     }
 
+    // Rounding a quantized duration reintroduces a seam: loop=10 at speed=200
+    // gives 10/6 = 1.666...s, which toFixed(2) turns into 1.67s (5.99 cycles).
+    // Keep full precision whenever loop mode is active.
+    function formatSeconds(seconds, precision = 2) {
+      return state.loop > 0 ? \`\${seconds}s\` : \`\${seconds.toFixed(precision)}s\`;
+    }
+
     function motionFor(rand, index) {
       let anim = state.motion;
       if (anim === 'mixed') anim = weightedPick(MOTION_WEIGHTS, rand);
@@ -1748,8 +1759,8 @@ export const SHAPY_HTML = `<!doctype html>
 
       return {
         anim,
-        dur: \`\${dur.toFixed(2)}s\`,
-        delay: \`\${delay.toFixed(2)}s\`,
+        dur: formatSeconds(dur),
+        delay: formatSeconds(delay),
         dx: typeof dx === 'number' ? \`\${dx.toFixed(2)}px\` : dx,
         dy: typeof dy === 'number' ? \`\${dy.toFixed(2)}px\` : dy,
         spin: \`\${spin.toFixed(2)}deg\`,
@@ -1960,8 +1971,8 @@ export const SHAPY_HTML = `<!doctype html>
         const ambientDur = loopDuration(30 + arand() * 30, 'alternate');
         const motion = {
           anim: 'float',
-          dur: \`\${ambientDur.toFixed(1)}s\`,
-          delay: \`\${(-arand() * ambientDur).toFixed(1)}s\`,
+          dur: formatSeconds(ambientDur, 1),
+          delay: formatSeconds(-arand() * ambientDur, 1),
           dx: \`\${((arand() - 0.5) * 36).toFixed(1)}px\`,
           dy: \`\${((arand() - 0.5) * 36).toFixed(1)}px\`,
           spin: \`\${((arand() - 0.5) * 18).toFixed(1)}deg\`,
