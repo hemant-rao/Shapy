@@ -8,9 +8,11 @@ capped at 64 tokens, registries at 20 groups, and each group at 200 items.
 Theming and text are presentation controls outside the composition math.
 Background/text/accent/muted/glow/scrim colors, the optional text overlay, and
 its position, scale, alignment, and font do not change which shapes are drawn or
-where they are placed. Custom registries can add user-defined emoji, image, or
-icon entries to the selectable pool; those entries are not included in the
-79-key counts below.
+where they are placed. Timeline controls (`live`, `time`, `loop`, and `seek()`),
+`safe-zones`, and `aspect` also do not change shape counts or placement; they
+select or mask the displayed frame. Custom registries can add user-defined emoji,
+image, or icon entries to the selectable pool; those entries are not included in
+the 79-key counts below.
 
 ## 1. Seed space
 
@@ -105,6 +107,11 @@ Pausing animations doubles the runtime states:
 ```text
 ≈ 3.824690 × 10^76
 ```
+
+Timeline controls add many possible frames per composition without changing the
+shape math: `seek()` can address any second, `loop` makes the clip periodic, and
+`live` can add non-deterministic mutations. Those states are intentionally not
+multiplied into the count above.
 
 Custom colors and custom media registries add user-defined combinations on top,
 so the real number is larger. Even this conservative count is so large that two

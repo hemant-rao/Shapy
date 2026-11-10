@@ -596,6 +596,7 @@ export const SHAPY_HTML = `<!doctype html>
   }
 
   .app.is-paused .shape__inner { animation-play-state: paused; }
+  .app.is-frozen .shape__inner { animation-play-state: paused !important; }
 
   @keyframes float {
     0%   { transform: translate3d(0, 0, 0) rotate(var(--r)) scale(1); }
@@ -1246,6 +1247,22 @@ export const SHAPY_HTML = `<!doctype html>
       return groupCount ? clean : null;
     }
 
+    function sanitizeSafeZones(raw) {
+      if (!Array.isArray(raw)) return [];
+      const zones = [];
+      for (const zone of raw) {
+        if (zones.length >= 12) break;
+        if (!zone || typeof zone !== 'object' || Array.isArray(zone)) continue;
+        const top = clampNumber(zone.top, 0, 0, 100);
+        const right = clampNumber(zone.right, 100, 0, 100);
+        const bottom = clampNumber(zone.bottom, 100, 0, 100);
+        const left = clampNumber(zone.left, 0, 0, 100);
+        if (right <= left || bottom <= top) continue;
+        zones.push({ top, right, bottom, left });
+      }
+      return zones;
+    }
+
     function normalizeState(target) {
       target.density = clampNumber(target.density, defaults.density, ...NUMERIC_LIMITS.density);
       target.scale = clampNumber(target.scale, defaults.scale, ...NUMERIC_LIMITS.scale);
@@ -1253,6 +1270,13 @@ export const SHAPY_HTML = `<!doctype html>
       target.move = clampNumber(target.move, defaults.move, ...NUMERIC_LIMITS.move);
       target.textScale = clampNumber(target.textScale, defaults.textScale, ...NUMERIC_LIMITS.textScale);
       target.fontWeight = clampNumber(target.fontWeight, defaults.fontWeight, ...NUMERIC_LIMITS.fontWeight);
+      target.live = target.live !== false;
+      target.time = target.time === null || target.time === undefined || target.time === ''
+        ? null
+        : clampNumber(target.time, 0, 0, 86400);
+      target.loop = clampNumber(target.loop, 0, 0, 600);
+      target.safeZones = sanitizeSafeZones(target.safeZones);
+      target.aspect = typeof target.aspect === 'string' ? target.aspect : 'auto';
       target.shapes = Array.isArray(target.shapes) ? target.shapes.map(String).slice(0, 256) : [];
       target.registry = sanitizeRegistry(target.registry);
       target.background = sanitizeColor(target.background) || '';
@@ -1281,6 +1305,11 @@ export const SHAPY_HTML = `<!doctype html>
       move: 100,
       customColors: '',
       safeArea: false,
+      safeZones: [],
+      live: true,
+      time: null,
+      loop: 0,
+      aspect: 'auto',
       paused: false,
       shapes: [],
       registry: null,
@@ -1587,6 +1616,17 @@ export const SHAPY_HTML = `<!doctype html>
       return vectors[mode] || vectors.lr;
     }
 
+    // Loop mode makes every animation duration divide the loop period exactly.
+    // Alternate animations also need an even number of cycles so the direction
+    // at t=loop matches the direction at t=0.
+    function loopDuration(duration, adir) {
+      const period = state.loop;
+      if (!(period > 0) || !(duration > 0)) return duration;
+      let divisions = Math.max(1, Math.round(period / duration));
+      if (adir === 'alternate' && divisions % 2 === 1) divisions += 1;
+      return period / divisions;
+    }
+
     function motionFor(rand, index) {
       let anim = state.motion;
       if (anim === 'mixed') anim = weightedPick(MOTION_WEIGHTS, rand);
@@ -1704,6 +1744,7 @@ export const SHAPY_HTML = `<!doctype html>
       const speed = state.speed / 100;
       dur /= speed;
       delay /= speed;
+      dur = loopDuration(dur, adir);
 
       return {
         anim,
@@ -1833,7 +1874,7 @@ export const SHAPY_HTML = `<!doctype html>
         Math.min(vw, vh) * (isMobile ? 0.16 : 0.18),
         isMobile ? 64 : 120
       );
-      let safeRect = null;
+      const safeRects = [];
       if (state.safeArea) {
         // Prefer the package's optional text overlay. The standalone demo and
         // package elements without text fall back to the hidden hero copy.
@@ -1841,17 +1882,25 @@ export const SHAPY_HTML = `<!doctype html>
         const safeEl = textOverlay && !textOverlay.hidden ? textOverlay : heroCopy;
         const copyRect = safeEl.getBoundingClientRect();
         const hostRect = shapesEl.getBoundingClientRect();
-        safeRect = {
+        const textRect = {
           left: copyRect.left - hostRect.left,
           right: copyRect.right - hostRect.left,
           top: copyRect.top - hostRect.top,
-          bottom: copyRect.bottom - hostRect.top,
-          width: copyRect.width,
-          height: copyRect.height
+          bottom: copyRect.bottom - hostRect.top
         };
-        if (!safeRect.width || !safeRect.height) {
-          safeRect = { left: vw * 0.08, right: vw * 0.62, top: vh * 0.2, bottom: vh * 0.8 };
+        if (copyRect.width && copyRect.height) {
+          safeRects.push(textRect);
+        } else {
+          safeRects.push({ left: vw * 0.08, right: vw * 0.62, top: vh * 0.2, bottom: vh * 0.8 });
         }
+      }
+      for (const zone of state.safeZones) {
+        safeRects.push({
+          left: (zone.left / 100) * vw,
+          right: (zone.right / 100) * vw,
+          top: (zone.top / 100) * vh,
+          bottom: (zone.bottom / 100) * vh
+        });
       }
 
       const layoutRand = makeRng(\`\${state.seed}|layout\`);
@@ -1908,10 +1957,11 @@ export const SHAPY_HTML = `<!doctype html>
         const rotation = arand() * 360;
         const x = ((i % ambientCols) + 0.5) / ambientCols * 100 + (arand() - 0.5) * 12;
         const y = (Math.floor(i / ambientCols) + 0.5) / ambientRows * 100 + (arand() - 0.5) * 12;
+        const ambientDur = loopDuration(30 + arand() * 30, 'alternate');
         const motion = {
           anim: 'float',
-          dur: \`\${(30 + arand() * 30).toFixed(1)}s\`,
-          delay: \`\${(-arand() * 30).toFixed(1)}s\`,
+          dur: \`\${ambientDur.toFixed(1)}s\`,
+          delay: \`\${(-arand() * ambientDur).toFixed(1)}s\`,
           dx: \`\${((arand() - 0.5) * 36).toFixed(1)}px\`,
           dy: \`\${((arand() - 0.5) * 36).toFixed(1)}px\`,
           spin: \`\${((arand() - 0.5) * 18).toFixed(1)}deg\`,
@@ -1965,10 +2015,10 @@ export const SHAPY_HTML = `<!doctype html>
         let opacity = 0.18 + rand() * 0.62;
         if (kind === 'lineV' || kind === 'lineH' || kind === 'lineD') opacity = Math.max(opacity, 0.35);
 
-        if (safeRect) {
+        if (safeRects.length) {
           const px = (x / 100) * vw;
           const py = (y / 100) * vh;
-          if (px > safeRect.left - 36 && px < safeRect.right + 36 && py > safeRect.top - 36 && py < safeRect.bottom + 36) {
+          if (safeRects.some((rect) => px > rect.left - 36 && px < rect.right + 36 && py > rect.top - 36 && py < rect.bottom + 36)) {
             opacity *= 0.35;
           }
         }
@@ -1987,7 +2037,9 @@ export const SHAPY_HTML = `<!doctype html>
       shapesEl.appendChild(frag);
       shapeCount.textContent = \`\${shapesEl.childElementCount + ambientEl.childElementCount} shapes · \${layout}\`;
       setSeedDisplay();
-      startLiveUpdates();
+      if (frozenTime !== null) freezeAt(frozenTime);
+      else if (app.classList.contains('is-frozen')) resumeTimeline();
+      else startLiveUpdates();
     }
 
     /* ---------- UI helpers ---------- */
@@ -2003,8 +2055,16 @@ export const SHAPY_HTML = `<!doctype html>
     }
 
     let liveTimer = null;
+    let frozenTime = state.time;
+
     function startLiveUpdates() {
-      if (liveTimer) clearInterval(liveTimer);
+      if (liveTimer) {
+        clearInterval(liveTimer);
+        liveTimer = null;
+      }
+      // Loop and time modes must stay deterministic, so they never mutate the
+      // composition after render.
+      if (state.live === false || state.time !== null || state.loop > 0 || frozenTime !== null) return;
       liveTimer = setInterval(() => {
         if (state.paused || prefersReducedMotion()) return;
         const inners = shapesEl.querySelectorAll('.shape__inner');
@@ -2041,6 +2101,73 @@ export const SHAPY_HTML = `<!doctype html>
           }
         }
       }, 6000 + Math.random() * 4000);
+    }
+
+    function getShapeAnimations() {
+      if (typeof app.getAnimations === 'function') {
+        return app.getAnimations({ subtree: true }).filter((animation) => {
+          const target = animation.effect && animation.effect.target;
+          return Boolean(target && target.classList && target.classList.contains('shape__inner'));
+        });
+      }
+      const animations = [];
+      for (const el of shapesEl.querySelectorAll('.shape__inner')) {
+        if (typeof el.getAnimations === 'function') animations.push(...el.getAnimations());
+      }
+      return animations;
+    }
+
+    function waitForPaint() {
+      return new Promise((resolve) => {
+        if (typeof requestAnimationFrame === 'function') {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        } else {
+          setTimeout(resolve, 0);
+        }
+      });
+    }
+
+    function freezeAt(seconds) {
+      if (liveTimer) {
+        clearInterval(liveTimer);
+        liveTimer = null;
+      }
+      let time = Number(seconds);
+      if (!Number.isFinite(time)) time = 0;
+      time = Math.max(0, time);
+      if (state.loop > 0) time = ((time % state.loop) + state.loop) % state.loop;
+      frozenTime = time;
+      app.classList.add('is-frozen');
+      for (const animation of getShapeAnimations()) {
+        try {
+          animation.pause();
+          animation.currentTime = time * 1000;
+        } catch {}
+      }
+      return waitForPaint().then(() => time);
+    }
+
+    function resumeTimeline() {
+      frozenTime = null;
+      app.classList.remove('is-frozen');
+      for (const animation of getShapeAnimations()) {
+        if (state.paused) continue;
+        try { animation.play(); } catch {}
+      }
+      if (state.time === null) {
+        startLiveUpdates();
+      } else if (liveTimer) {
+        clearInterval(liveTimer);
+        liveTimer = null;
+      }
+    }
+
+    function seekTimeline(seconds) {
+      if (seconds === null || seconds === undefined || seconds === '') {
+        resumeTimeline();
+        return Promise.resolve(null);
+      }
+      return freezeAt(Number(seconds));
     }
 
     function syncControls() {
@@ -2218,6 +2345,7 @@ export const SHAPY_HTML = `<!doctype html>
 
     function destroy() {
       clearInterval(liveTimer);
+      liveTimer = null;
       clearTimeout(toastTimer);
       clearTimeout(resizeTimer);
       cancelAnimationFrame(renderRaf);
@@ -2228,6 +2356,7 @@ export const SHAPY_HTML = `<!doctype html>
     function apply(next) {
       Object.assign(state, next);
       normalizeState(state);
+      frozenTime = state.time;
       syncControls();
       syncPause();
       applyPalette();
@@ -2236,12 +2365,13 @@ export const SHAPY_HTML = `<!doctype html>
 
     /* ---------- boot ---------- */
 
+    window.__SHAPY_APPLY__ = apply;
+    window.__SHAPY_DESTROY__ = destroy;
+    window.__SHAPY_SEEK__ = seekTimeline;
     syncControls();
     syncPause();
     applyPalette();
     render();
-    window.__SHAPY_APPLY__ = apply;
-    window.__SHAPY_DESTROY__ = destroy;
   })();
   </script>
 </body>

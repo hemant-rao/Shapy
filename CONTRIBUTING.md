@@ -103,6 +103,14 @@ Run the Node test suite:
 npm test
 ```
 
+This runs the core package tests and the fast `shapy-render` unit tests. The
+opt-in export E2E test needs Playwright Chromium and an ffmpeg with
+`libvpx-vp9`:
+
+```bash
+SHAPY_RENDER_E2E=1 npm run test:e2e
+```
+
 Run the complete repository verification:
 
 ```bash
@@ -110,7 +118,7 @@ npm run verify
 ```
 
 `verify` regenerates the template, checks documentation and package metadata,
-runs the tests, builds the Vue demo, and dry-runs the npm package.
+runs the tests, builds the Vue demo, and dry-runs both npm packages.
 
 For rendering changes, also check the demo at:
 

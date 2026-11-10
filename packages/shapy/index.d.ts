@@ -63,6 +63,25 @@ export type ShapyTextPosition =
 
 export type ShapyTextAlign = 'left' | 'center' | 'right';
 
+export type ShapyAspect = 'auto' | '9:16' | '16:9' | '1:1' | '4:5';
+
+export type ShapySafeZonePreset = 'tiktok' | 'reels' | 'shorts' | 'story';
+
+/**
+ * A safe zone as percentages of the host box. `right` must be greater than
+ * `left`, and `bottom` greater than `top`.
+ */
+export interface ShapySafeZoneRect {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+export type ShapySafeZones =
+  | string
+  | Array<ShapySafeZonePreset | ShapySafeZoneRect>;
+
 /**
  * A safe, serializable inline SVG icon. `path` and `paths` contain SVG path
  * data only; raw SVG markup and event handlers are never accepted.
@@ -126,6 +145,17 @@ export interface ShapyOptions {
   colors?: string | string[];
   safeArea?: boolean;
   'safe-area'?: boolean;
+  /** Platform UI zones to keep clear. Presets: tiktok, reels, shorts, story. */
+  safeZones?: ShapySafeZones;
+  'safe-zones'?: ShapySafeZones;
+  /** Disable live composition updates. `off` is the only supported string value. */
+  live?: boolean | 'on' | 'off';
+  /** Freeze the timeline at a second. `null` removes the attribute. */
+  time?: number | null;
+  /** Loop period in seconds. Bare `loop` defaults to 10 seconds. */
+  loop?: number | boolean;
+  /** Host aspect ratio. */
+  aspect?: ShapyAspect;
   paused?: boolean;
   registryData?: ShapyRegistry | string;
   'registry-data'?: ShapyRegistry | string;
@@ -203,6 +233,11 @@ export interface ShapyOptionsSnapshot {
   move: number;
   customColors: string[];
   safeArea: boolean;
+  safeZones: ShapySafeZoneRect[];
+  live: boolean;
+  time: number | null;
+  loop: number;
+  aspect: ShapyAspect;
   paused: boolean;
   background: string;
   textColor: string;
@@ -231,6 +266,13 @@ export function createShapy(): ShapyInstance;
 /** Returns a new 32-character hex seed. */
 export function createSeed(): string;
 
+/**
+ * Version of the composition and timeline engine. A seed keeps producing the
+ * same static composition and the same seek frames for the same options,
+ * viewport, and engine major version.
+ */
+export const SHAPY_ENGINE_VERSION: number;
+
 export interface ShapyReadyEventDetail {
   element: ShapyBackgroundElement;
   seed: string;
@@ -249,6 +291,11 @@ export interface ShapyBackgroundElement extends HTMLElement {
   getOptions(): ShapyOptionsSnapshot;
   /** Force a re-render with the current attributes. */
   refresh(): this;
+  /**
+   * Freeze the renderer at an exact timeline position in seconds. Resolves
+   * after the frame is painted. Pass `null` to resume the live timeline.
+   */
+  seek(seconds: number | null): Promise<this>;
 }
 
 declare global {

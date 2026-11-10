@@ -28,7 +28,7 @@ any framework that can render a custom element.
 | --- | --- |
 | [Why Shapy?](#why-shapy) · [Try it in 2 minutes](#try-it-in-2-minutes) | What it is and how to run it |
 | [Use it in your project](#use-it-in-your-project) · [Attributes](#attributes) | Install and configure |
-| [Choosing shapes](#choosing-shapes) · [Custom media](#custom-media) | Compose the pattern |
+| [Deterministic frames](#deterministic-frames) · [Choosing shapes](#choosing-shapes) · [Custom media](#custom-media) | Compose and capture the pattern |
 | [Text overlay](#text-overlay) · [Theming and CSS hooks](#theming-and-css-hooks) | Complete heroes |
 | [JavaScript API](#javascript-api) · [Vue 3](#vue-3) | Programmatic control |
 | [Local development](#local-development) · [Project structure](#project-structure) · [Publishing](#publishing) | Work on the repo |
@@ -122,8 +122,10 @@ inline style makes it fill the viewport.
 - [Vue 3](#vue-3) — compiler setup and a component example.
 - [Optional stickers](#optional-stickers) — sticker registry and custom media.
 - [Seed model](#seed-model) — how deterministic patterns work.
+- [Video export](#video-export) — MP4, WebM, PNG, alpha, and posters.
 - [Troubleshooting](#troubleshooting) — common problems and fixes.
 - [How unique is a seed?](./docs/UNIQUENESS.md) — the full math.
+- [Seed stability](./docs/SEED_STABILITY.md) — the engine-version contract.
 - [Local development](#local-development) — run, test, and build this repo.
 
 ## Attributes
@@ -146,6 +148,11 @@ inline style makes it fill the viewport.
 | `move` | 30–200 | `100` | Movement distance multiplier. |
 | `custom-colors` | comma-separated colors | empty | Override palette colors, e.g. `#ff3b30, #30d158`. |
 | `safe-area` | boolean attribute | off | Dims shapes behind the text area. |
+| `safe-zones` | preset list or JSON | empty | Dims shapes inside platform UI bands: `tiktok`, `reels`, `shorts`, `story`, or custom `{top,right,bottom,left}` percentages. |
+| `live` | `on` / `off` | `on` | `off` disables periodic live mutations. |
+| `time` | seconds | unset | Freezes the timeline at an exact second. |
+| `loop` | seconds | off | Seamless loop period. Bare `loop` uses 10 seconds. |
+| `aspect` | `auto` `9:16` `16:9` `1:1` `4:5` | `auto` | Host aspect ratio when the parent allows automatic height. |
 | `paused` | boolean attribute | off | Pauses all animations. |
 
 Boolean attributes are enabled by presence:
@@ -182,6 +189,85 @@ Explicit attributes win over host CSS variables, which win over the palette.
 | `text-scale` | `100` | 50–200. Scales the headline and body. |
 | `font-family` | package display font | A safe CSS font stack, for example `Georgia, serif`. |
 | `font-weight` | `400` | 100–900. Headline weight. |
+
+## Deterministic frames
+
+For screenshots, video, and GIF pipelines, disable live mutations and seek to an
+exact frame:
+
+```html
+<shapy-background
+  seed="reel-01"
+  palette="ocean"
+  live="off"
+  loop="8"
+  safe-zones="tiktok"
+  aspect="9:16"
+  style="width: 100%; display: block;"
+></shapy-background>
+```
+
+```js
+const element = document.querySelector('shapy-background');
+
+await element.seek(2.5);   // freeze at 2.5 seconds
+// capture the element here
+
+await element.seek(null);  // resume the live timeline
+```
+
+- `live="off"` stops the periodic color and animation mutations. CSS animations
+  continue until you seek or pause.
+- `time="4"` is the declarative form of `seek(4)`.
+- `loop="8"` quantizes every animation duration to the loop period, so the frame
+  at `8s` matches `0s`. `seek()` wraps around the loop.
+- `safe-zones="tiktok,reels"` dims shapes behind common platform UI bands.
+  Custom zones are percentage rectangles:
+  `[{"top":0,"right":100,"bottom":12,"left":0}]`.
+- `aspect="9:16"` sets the host ratio. For a full-bleed video, size a wrapper to
+  1080×1920 and let the element fill it.
+
+The composition and seek frames are stable for the same seed, options, viewport,
+device pixel ratio, and `SHAPY_ENGINE_VERSION`. See
+[Seed stability](./docs/SEED_STABILITY.md) for the exact contract.
+
+## Video export
+
+The core package stays zero-dependency. For MP4, WebM, or PNG output, use the
+separate [`shapy-render`](./packages/shapy-render) package:
+
+```bash
+npm install shapy shapy-render
+npx playwright install chromium
+npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
+```
+
+For a 9:16 clip with safe zones and a poster:
+
+```bash
+npx shapy-render \
+  --seed reel-01 \
+  --palette ocean \
+  --width 1080 --height 1920 \
+  --duration 8 \
+  --loop 8 \
+  --safe-zones tiktok \
+  --output reel.mp4 \
+  --poster poster.png
+```
+
+- **MP4** needs a system `ffmpeg` with `libx264`.
+- **WebM** uses VP9; non-alpha WebM works with Playwright's bundled ffmpeg.
+  Alpha WebM needs a full ffmpeg with PNG decoding.
+- **Alpha** is supported in WebM and PNG sequences, not MP4.
+- **PNG sequences** use `--format png --output frames`.
+- `--loop` quantizes the animation to a seamless period; keep `--duration` an
+  exact multiple of it for a clean repeat.
+- `shapy-render` always captures with `live="off"` and `seek()`, so frames are
+  deterministic.
+
+See the [shapy-render README](./packages/shapy-render/README.md) for the CLI and
+library API.
 
 ## Choosing shapes
 
@@ -483,6 +569,9 @@ element.setOptions({ palette: 'plum', density: 48, paused: true });
 element.setOptions({ text: null, background: null }); // remove options
 element.refresh();                                    // force a re-render
 const options = element.getOptions();                 // normalized snapshot
+
+await element.seek(2.5);                              // freeze a frame
+await element.seek(null);                             // resume
 ```
 
 `setOptions()` removes an option when its value is `null`, `undefined`, or
@@ -626,12 +715,14 @@ Useful commands:
 ```bash
 npm run dev            # start the Vue demo with Vite
 npm run dev:example    # start the minimal HTML example
-npm test               # run the Node test suite
+npm test               # run core + render unit tests
+npm run test:e2e       # optional render capture test (set SHAPY_RENDER_E2E=1)
 npm run build          # build the Vue demo
 npm run check:repo     # check docs, exports, and generated files
-npm run verify         # regenerate, test, check, build, and dry-run the package
+npm run verify         # regenerate, test, check, build, and dry-run both packages
 npm run pack:shapy     # npm pack the core package
-npm run pack:check     # dry-run the package tarball
+npm run pack:render    # npm pack shapy-render
+npm run pack:check     # dry-run both package tarballs
 ```
 
 ## Project structure
@@ -639,16 +730,22 @@ npm run pack:check     # dry-run the package tarball
 ```
 Shapy-code/
 ├─ packages/
-│  └─ shapy/                   Published npm package
-│     ├─ src/shapy-bg.js       Custom element + attribute mapping
-│     ├─ src/shapy-index.html  Renderer source (edit this)
-│     ├─ src/shapy-template.js Generated package template (do not edit)
-│     ├─ src/catalog.js        Core shape + emoji catalog
-│     ├─ src/stickers.js       Optional sticker registry
-│     ├─ src/index.js          Public createShapy() API
-│     ├─ index.d.ts            Public TypeScript declarations
-│     ├─ README.md             npm package documentation
-│     └─ scripts/              Package template build script
+│  ├─ shapy/                   Published npm package
+│  │  ├─ src/shapy-bg.js       Custom element + attribute mapping
+│  │  ├─ src/shapy-index.html  Renderer source (edit this)
+│  │  ├─ src/shapy-template.js Generated package template (do not edit)
+│  │  ├─ src/catalog.js        Core shape + emoji catalog
+│  │  ├─ src/stickers.js       Optional sticker registry
+│  │  ├─ src/index.js          Public createShapy() API
+│  │  ├─ index.d.ts            Public TypeScript declarations
+│  │  ├─ README.md             npm package documentation
+│  │  └─ scripts/              Package template build script
+│  └─ shapy-render/            Optional video/PNG export package
+│     ├─ src/index.js          Playwright capture + render API
+│     ├─ src/ffmpeg.js         ffmpeg discovery and encoding
+│     ├─ src/options.js        Input validation + format inference
+│     ├─ bin/shapy-render.js   CLI
+│     └─ README.md             Export documentation
 ├─ apps/
 │  └─ demo/                    Vue 3 background-only + config demo
 ├─ examples/
@@ -658,10 +755,13 @@ Shapy-code/
 │  ├─ sync-standalone.mjs      Copy renderer source to examples/
 │  └─ check-repo.mjs           Docs, package, and generated-file checks
 ├─ tests/
-│  └─ package.test.mjs         Node test suite for the package surface
+│  ├─ package.test.mjs         Core package test suite
+│  ├─ render.test.mjs          Render validation and CLI tests
+│  └─ render.e2e.test.mjs      Opt-in capture/export E2E test
 ├─ docs/
 │  ├─ GETTING_STARTED.md       Step-by-step beginner guide
 │  ├─ UNIQUENESS.md            Full composition-count math
+│  ├─ SEED_STABILITY.md        Engine-version stability contract
 │  └─ AI_CONTEXT.md            Architecture notes for future work
 ├─ .github/
 │  ├─ FUNDING.yml              GitHub Sponsors metadata
@@ -685,15 +785,19 @@ Shapy-code/
 npm run verify
 npm run pack:check
 npm run publish:shapy
+npm run publish:render
 ```
+
+The repository has two publishable packages. `npm run pack:check` dry-runs both.
+Publish `shapy` and `shapy-render` separately, each after approval.
 
 Before publishing:
 
-1. Bump the version in `packages/shapy/package.json`.
+1. Bump the version in both `package.json` files when publishing both.
 2. Update `CHANGELOG.md`.
 3. Run `npm run verify` and confirm the test suite passes.
 4. Run the demo and the manual checks in [`AGENTS.md`](./AGENTS.md).
-5. Review the dry-run file list and tarball size.
+5. Review both dry-run file lists and tarball sizes.
 6. Confirm the working tree is clean.
 
 Run `npm publish` only after explicit approval and a successful `npm login`.

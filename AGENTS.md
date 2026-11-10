@@ -58,12 +58,13 @@ Read it before touching code.
 13. **Keep project identity consistent.** The author is Hemant Rao, the sponsor
     is Odio Book (`https://odiobook.com`), and funding is GitHub Sponsors
     (`https://github.com/sponsors/hemant-rao`). Keep those names, links, and the
-    MIT copyright line identical across both READMEs, both `LICENSE` files,
-    both `package.json` files, `.github/FUNDING.yml`, `CONTRIBUTING.md`,
-    `SECURITY.md`, and `CODE_OF_CONDUCT.md`. Do not remove the sponsor sections.
-14. **Version policy:** the package version is `1.0.0` until the owner explicitly
-    publishes or asks for a bump. Do not bump it during documentation or
-    production-readiness work.
+    MIT copyright line identical across the repository, core, and render
+    READMEs, all `LICENSE` files, the root/core/render package manifests,
+    `.github/FUNDING.yml`, `CONTRIBUTING.md`, `SECURITY.md`, and
+    `CODE_OF_CONDUCT.md`. Do not remove the sponsor sections.
+14. **Version policy:** the `shapy` and `shapy-render` versions are `1.0.0` until
+    the owner explicitly publishes or asks for a bump. Do not bump them during
+    documentation or production-readiness work.
 
 ## Source of truth
 
@@ -81,20 +82,26 @@ Read it before touching code.
 | Demo background page | `apps/demo/src/pages/Home.vue` |
 | Beginner guide | `docs/GETTING_STARTED.md` |
 | Composition math | `docs/UNIQUENESS.md` |
-| Tests | `tests/package.test.mjs` |
+| Seed stability contract | `docs/SEED_STABILITY.md` |
+| Render API + capture | `packages/shapy-render/src/index.js` |
+| Render validation + format inference | `packages/shapy-render/src/options.js` |
+| Render encoding + ffmpeg discovery | `packages/shapy-render/src/ffmpeg.js` |
+| Render CLI | `packages/shapy-render/bin/shapy-render.js` |
+| Render public types | `packages/shapy-render/index.d.ts` |
+| Tests | `tests/package.test.mjs`, `tests/render.test.mjs`, `tests/render.e2e.test.mjs` |
 | Contribution guide | `CONTRIBUTING.md` |
 | Security policy | `SECURITY.md` |
 | Community standards | `CODE_OF_CONDUCT.md` |
 | Sponsorship metadata | `.github/FUNDING.yml` |
-| Docs | `README.md`, `packages/shapy/README.md`, `docs/`, `CHANGELOG.md` |
+| Docs | `README.md`, `packages/shapy/README.md`, `packages/shapy-render/README.md`, `docs/`, `CHANGELOG.md` |
 
 ## Change workflow
 
 1. Inspect the relevant code and current behavior.
 2. Write the smallest possible change.
 3. Run `npm run verify` to regenerate generated files, check docs and package
-   consistency, run the Node test suite, build the demo, and dry-run the
-   package.
+   consistency, run the Node test suite, build the demo, and dry-run both
+   packages.
 4. Run the demo and verify visually and programmatically:
    - Desktop `1350x800`
    - Mobile `390x844`
@@ -117,17 +124,21 @@ Read it before touching code.
 - [ ] Alignment modes: random, left, center, right, top, middle, bottom.
 - [ ] Size modes: mixed, same, subtle, dramatic, small, medium, large.
 - [ ] Pause, reset, new seed, copy seed, custom colors, safe area.
+- [ ] `time`/`seek()` frames repeat, and the loop boundary matches the start.
+- [ ] `safe-zones` presets and `aspect="9:16"` render as expected.
+- [ ] `SHAPY_RENDER_E2E=1 npm run test:e2e` passes when Chromium and ffmpeg are
+      available.
 - [ ] Mobile shapes are small and the config panel remains scrollable.
 - [ ] Wide-screen shapes stay under the caps.
-- [ ] `npm pack --dry-run` includes the expected files.
+- [ ] `npm pack --dry-run` includes the expected files for both packages.
 
 ## Publishing checklist
 
-- [ ] Version is `1.0.0` unless the owner explicitly approved a bump.
+- [ ] Versions are `1.0.0` unless the owner explicitly approved a bump.
 - [ ] `CHANGELOG.md` updated.
 - [ ] `npm test` succeeds.
 - [ ] `npm run verify` succeeds.
-- [ ] Tarball contents and size reviewed.
+- [ ] Tarball contents and size reviewed for both packages.
 - [ ] Working tree is clean.
-- [ ] `npm run publish:shapy` run only after explicit user approval and a
-      successful `npm login`.
+- [ ] `npm run publish:shapy` and `npm run publish:render` run only after
+      explicit user approval and a successful `npm login`.

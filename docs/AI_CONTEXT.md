@@ -52,13 +52,15 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 | `packages/shapy/src/shapy-index.html` | Full renderer template source: composition, theming, text overlay CSS, registry and color sanitization. |
 | `packages/shapy/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
 | `packages/shapy/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
-| `packages/shapy/src/index.js` | `createShapy()`, `createSeed()`, and catalog re-exports. |
+| `packages/shapy/src/index.js` | `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and catalog re-exports. |
 | `packages/shapy/src/seed.js` | `createSeed()`: 32-character hex seed generator used by the element and the public API. |
 | `packages/shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
 | `packages/shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
 | `scripts/sync-standalone.mjs` | Copies the renderer source to `examples/standalone.html`. |
 | `scripts/check-repo.mjs` | Checks docs links, package exports, generated files, stale paths, author/sponsor metadata, and required community files. |
-| `tests/package.test.mjs` | Node test suite for seed generation, catalog counts, sticker serialization, package exports, metadata, and documentation attribution. |
+| `tests/package.test.mjs` | Core package tests for seed generation, catalog counts, sticker serialization, package exports, metadata, and documentation attribution. |
+| `tests/render.test.mjs` | Fast `shapy-render` tests for input rejection, CLI behavior, and format inference. |
+| `tests/render.e2e.test.mjs` | Opt-in Playwright/ffmpeg test for loop closure, WebM, alpha PNG, and poster output. |
 | `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy/stickers`. |
 | `CONTRIBUTING.md` | Contribution workflow, local setup, code rules, testing, and release checklist. |
 | `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model. |
@@ -76,6 +78,8 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 | `examples/standalone.html` | Generated standalone demo. Built from `shapy-index.html` by `npm run build:template`; do not edit by hand. |
 | `docs/GETTING_STARTED.md` | Step-by-step beginner guide with recipes and troubleshooting. |
 | `docs/UNIQUENESS.md` | Full seed and settings combination math. |
+| `docs/SEED_STABILITY.md` | Engine-version contract for stable seeds and seek frames. |
+| `packages/shapy-render/` | Optional Playwright-based export package for MP4, WebM, and PNG output. `src/index.js` captures frames, `src/ffmpeg.js` discovers and drives ffmpeg, `src/options.js` validates input and infers formats, and `bin/shapy-render.js` is the CLI. |
 | `README.md` | Public repository documentation and documentation map. |
 | `AGENTS.md` | Strict rules for AI-assisted changes. |
 | `CHANGELOG.md` | Change history. |
@@ -86,11 +90,11 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 
    `seed`, `palette`, `shape-set`, `layout`, `align`, `motion`, `direction`,
    `density`, `scale`, `size-mode`, `speed`, `move`, `custom-colors`,
-   `safe-area`, `paused`, `shapes`, `registry-data`, `registry`, `background`,
-   `text-color`, `muted-color`, `accent-color`, `glow-color`, `scrim-color`,
-   `scrim`, `headline`, `text`, `text-accent`, `subtext`, `description`,
-   `eyebrow`, `text-position`, `text-align`, `text-scale`, `font-family`,
-   `font-weight`.
+   `safe-area`, `safe-zones`, `live`, `time`, `loop`, `aspect`, `paused`,
+   `shapes`, `registry-data`, `registry`, `background`, `text-color`,
+   `muted-color`, `accent-color`, `glow-color`, `scrim-color`, `scrim`,
+   `headline`, `text`, `text-accent`, `subtext`, `description`, `eyebrow`,
+   `text-position`, `text-align`, `text-scale`, `font-family`, `font-weight`.
 
 2. `_readState()` builds a plain state object:
 
@@ -98,7 +102,7 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
    {
      seed, palette, shapeSet, layout, align, motion, direction,
      density, scale, sizeMode, speed, move, customColors,
-     safeArea, paused, shapes, registry,
+     safeArea, safeZones, live, time, loop, aspect, paused, shapes, registry,
      background, textColor, mutedColor, accentColor, glowColor, scrimColor, scrim,
      text, textAccent, subtext, eyebrow, textPosition, textAlign,
      textScale, fontFamily, fontWeight
@@ -107,9 +111,12 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 
    Numeric attributes are finite-number checked and clamped to the documented
    ranges: `density` 20–100, `scale` 60–140, `speed` 50–200, `move` 30–200,
-   `text-scale` 50–200, `font-weight` 100–900. Invalid values fall back to the
-   attribute default instead of producing `NaN`. The renderer applies the same
-   normalization when it receives state. Color attributes, `custom-colors`, and
+   `text-scale` 50–200, `font-weight` 100–900. `time` is 0–86400 seconds and
+   `loop` is 0–600 seconds. `live` is true unless the attribute is `off`,
+   `false`, `0`, or `no`. Invalid values fall back to the attribute default
+   instead of producing `NaN`. The renderer applies the same normalization when
+   it receives state. `safe-zones` is parsed by `parseSafeZones()` into at most
+   12 validated percentage rectangles. Color attributes, `custom-colors`, and
    registry item colors are validated with a CSS color allowlist plus
    `CSS.supports('color', value)` in browsers; unsafe or invalid values are
    dropped. `customColors` is normalized to a comma-joined string and parsed back
@@ -129,7 +136,8 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
    match renderer elements. A `document` shim maps renderer queries to the shadow
    root. A `window` shim maps `innerWidth`/`innerHeight` to the host size,
    forwards non-resize listeners to `globalThis`, and exposes
-   `__SHAPY_STATE__`, `__SHAPY_APPLY__`, and `__SHAPY_DESTROY__`. The renderer
+   `__SHAPY_STATE__`, `__SHAPY_APPLY__`, `__SHAPY_DESTROY__`, and
+   `__SHAPY_SEEK__`. The renderer
    never reads `globalThis.ShapyRegistry`; custom groups arrive only through the
    `registry-data` attribute. There is no `eval` or `new Function`; the renderer
    script text is static and generated from `shapy-index.html`.
@@ -148,12 +156,24 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
    - creates main shapes with `createShape()`,
    - assigns motion CSS variables with `motionFor()`,
    - starts live updates that periodically tweak animations, unless
-     `prefers-reduced-motion: reduce` is active.
+     `live="off"`, `time`, `loop`, or `prefers-reduced-motion: reduce` applies.
+
+`time` sets `frozenTime`, adds `.is-frozen`, and calls `freezeAt()` during render.
+`loop` only quantizes animation durations and disables live updates; it does not
+pause animations. `seek(t)` freezes through the same `freezeAt()` path without
+rewriting the `time` attribute, so frame capture does not trigger a full
+re-render. The frozen class pauses shape animations; `freezeAt()` additionally
+uses the Web Animations API to pause every shape animation and set `currentTime`
+in milliseconds. `seek(null)` and removing `time` call `resumeTimeline()`, which
+plays animations again and restarts live updates only when `live` is on and
+`time` is unset.
 
 Lifecycle: the first `connectedCallback` calls `_init()`. Later attribute changes
 are debounced by 80 ms and call `_apply(state)`. `setOptions()` writes
 attributes and applies immediately; `getOptions()` returns a normalized snapshot;
-`refresh()` forces `_apply()`. `disconnectedCallback` calls `_destroy()`, which
+`refresh()` forces `_apply()`. `seek(seconds)` freezes the renderer at an exact
+timeline position and resolves after two animation frames; `seek(null)` resumes
+the timeline. `disconnectedCallback` calls `_destroy()`, which
 clears renderer timers/listeners and empties the shadow root; reconnecting
 reinitializes the renderer. A `ResizeObserver` on the host and a global `resize`
 listener trigger re-renders. The host exposes `role="img"` and
@@ -167,6 +187,10 @@ Color precedence inside the renderer is explicit attribute, then host
 `--shapy-bg`, `--shapy-ink`, `--shapy-muted`, `--shapy-accent`, `--shapy-glow`,
 and `--shapy-scrim`. The text overlay exposes `::part(text)`, `::part(eyebrow)`,
 `::part(headline)`, and `::part(body)`.
+
+`aspect` is opt-in. Without it, the host keeps its normal `width: 100%; height:
+100%` sizing. `aspect="9:16"`, `"16:9"`, `"1:1"`, or `"4:5"` sets `aspect-ratio`
+and `height: auto` on the host, so the parent must allow automatic height.
 
 ## Seed and combination space
 
@@ -308,12 +332,42 @@ the layout with `visibility: hidden` so the rect remains measurable; if the rect
 has zero width or height, the renderer falls back to a proportional safe
 rectangle.
 
+`safe-zones` is independent of `safe-area` and produces additional rectangles.
+`parseSafeZones()` accepts a comma list of presets (`tiktok`, `reels`, `shorts`,
+`story`), a JSON array of preset names and/or `{top,right,bottom,left}` objects,
+or an array through `setOptions()`. Values are percentages of the host box from
+0 to 100; invalid and inverted rectangles are dropped, and the total is capped at
+12. The renderer converts each rectangle to pixels and dims shapes in any zone to
+35% opacity with a 36 px margin.
+
 ## Motion
 
 `motionFor(rand, index)` maps the selected motion mode to CSS variables:
 `--anim`, `--dur`, `--delay`, `--dx`, `--dy`, `--spin`, `--sc`, `--ease`,
 `--adir`, `--iterations`. The template's CSS keyframes consume these variables.
 `state.paused` pauses the animations via injected CSS and the template state.
+When `loop` is active, `loopDuration()` recomputes every adjusted duration so the
+loop period is an exact multiple of the duration. Alternate animations use an even
+number of cycles, so the direction at the loop boundary matches the start.
+
+## Deterministic timeline
+
+The timeline contract is:
+
+- `live="off"` stops periodic composition mutations. CSS animations keep running
+  unless `paused` or `time` also applies.
+- `time="t"` freezes the timeline at `t` seconds and disables live mutations.
+  `seek(t)` is the imperative equivalent without rewriting the attribute.
+- `loop="p"` quantizes animation durations to divide `p` exactly and disables
+  live mutations. Bare `loop` reads as 10 seconds. `seek()` wraps into `[0, p)`.
+- `seek(null)` clears the frozen state. If `time` is unset and `live` is on, live
+  updates resume.
+- `paused` alone pauses animations but does not disable live mutations.
+
+The engine version exported as `SHAPY_ENGINE_VERSION` (currently `1`) scopes the
+seed-stability contract. Any renderer change that alters composition or seek
+frames must bump the engine version and the package major version. The full
+policy lives in `docs/SEED_STABILITY.md`.
 
 ## Demo state (Vue)
 
@@ -354,20 +408,40 @@ npm run build:template
 This writes `packages/shapy/src/shapy-template.js` and syncs
 `examples/standalone.html`. Both files are generated; edit only the package
 renderer source. `npm run verify` regenerates both, runs repository checks, runs
-the Node test suite, builds the Vue demo, and runs `npm pack --dry-run` for the
-package.
+the Node test suite, builds the Vue demo, and runs `npm pack --dry-run` for both
+packages.
 
 ## Testing
 
-Run the zero-dependency Node test suite:
+Run the fast Node test suite:
 
 ```bash
 npm test
 ```
 
-It covers seed generation, catalog counts, sticker serialization, package
-exports, package metadata, and documentation attribution. It does not render
-the Web Component.
+This runs `tests/package.test.mjs` and `tests/render.test.mjs`. The core suite
+covers seed generation, catalog counts, sticker serialization, package exports,
+package metadata, and documentation attribution. The render suite covers invalid
+option rejection, CLI help/version/error handling, and output-format inference
+without launching a browser. `tests/render.e2e.test.mjs` is not part of
+`npm test`.
+
+Run the opt-in export E2E test when Playwright Chromium and an ffmpeg with
+`libvpx-vp9` are available:
+
+```bash
+SHAPY_RENDER_E2E=1 npm run test:e2e
+```
+
+On PowerShell:
+
+```powershell
+$env:SHAPY_RENDER_E2E='1'; npm run test:e2e
+```
+
+The E2E test renders a 320×568 loop, byte-compares the t=0 and t=loop frames,
+encodes a WebM, verifies alpha PNG color type 6, and writes a poster. It is not
+part of `npm run verify`; CI exposes it as a manual `workflow_dispatch` job.
 
 The demo runs with Vite at the URL it prints (usually
 `http://localhost:5173`) while developing. Both `npm run dev` and
@@ -398,6 +472,20 @@ Checks that matter:
   paths, unsafe image schemes, malformed icons, empty items, and registry limits
 - element API: `setOptions()` aliases/removals, `getOptions()` normalization,
   `refresh()`, `shapy:ready`, and `shapy:change`
+- deterministic timeline: default `live`/`time`/`loop`/`aspect`/`safeZones`,
+  frozen class and animation play state, repeated `seek(t)` frame equality,
+  `seek(null)` resume, and loop boundary frame equality
+- loop quantization: every shape duration divides the loop period, alternate
+  directions use even cycle counts
+- safe zones: `tiktok`/`reels`/`shorts`/`story` preset counts, custom rectangle
+  parsing and clamping, dimming inside zones, no dimming when removed
+- `aspect="9:16"` produces a 9:16 host box when the parent allows auto height
+- `SHAPY_ENGINE_VERSION` is exported from the package root and documented
+- `shapy-render` rejects invalid input before launching a browser, infers formats
+  from output extensions, emits JPEG frames when ffmpeg lacks PNG decoding, and
+  reports `engineVersion` in the result
+- opt-in render E2E: loop-boundary frame equality, non-empty WebM, RGBA alpha
+  PNG (color type 6), and poster generation
 - `::part(text/eyebrow/headline/body)` styling and host variable inheritance
 - two components on one page remain independent; hostile light-DOM CSS does not
   change renderer shapes
@@ -413,10 +501,11 @@ Checks that matter:
 1. **Shadow DOM is required.** The renderer needs Custom Elements and
    `attachShadow`; there is no light-DOM fallback. If Shadow DOM is unavailable,
    the component renders nothing.
-2. **Browser behavior is not yet covered by committed browser tests.** The Node
-   test suite covers the package surface; rendering, theming, text, and registry
-   behavior are verified with a Playwright matrix that currently lives outside
-   the repository.
+2. **Browser behavior is not fully covered by committed tests.** The fast Node
+   suite covers the package surface and render validation. `tests/render.e2e.test.mjs`
+   covers export capture when explicitly enabled, but the full interactive
+   renderer, theming, text, and registry matrix still lives outside the
+   repository.
 3. **Publish pending approval.** Version `1.0.0` is packaged and verified but
    has not been pushed to npm. Publish only after explicit approval and a
    successful `npm login`.
@@ -424,6 +513,19 @@ Checks that matter:
    inside the renderer are shims, but non-resize listeners are forwarded to the
    real `globalThis`. Custom shape groups are supplied only through
    `registry-data`; there is no global registry.
+5. **Video export is a separate package.** Core `shapy` stays zero-dependency
+   and does not bundle an encoder. `packages/shapy-render` uses Playwright for
+   frame capture and can emit MP4, WebM, and PNG sequences. The render result
+   includes the `SHAPY_ENGINE_VERSION` used for the capture. MP4 alpha is not
+   supported; use WebM VP9 or a PNG sequence when transparency is required.
+   MP4 output needs a system `ffmpeg` with an H.264 encoder. Non-alpha WebM VP9
+   uses Playwright's bundled ffmpeg when available; PNG sequences need no ffmpeg.
+   Playwright's ffmpeg build lacks a PNG decoder, so non-alpha WebM captures fall
+   back to JPEG frames and alpha WebM requires a full ffmpeg or a PNG sequence.
+6. **Seek frames are not pixel-identical across environments.** Composition and
+   timeline geometry are stable, but browser rasterization, emoji artwork, and
+   font availability can differ. Pin the viewport, device pixel ratio, fonts, and
+   engine version for reproducible captures.
 
 ## Next recommended work
 
@@ -432,3 +534,4 @@ Checks that matter:
    allows it.
 3. Consider exposing the new theming and text controls in the Vue config demo;
    the package API already supports them.
+4. Add audio track support to `shapy-render` if users ask for narrated clips.

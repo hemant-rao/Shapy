@@ -3,7 +3,8 @@ import { createSeed } from './seed.js';
 
 const ATTRS = [
   'seed', 'palette', 'shape-set', 'layout', 'align', 'motion', 'direction',
-  'density', 'scale', 'size-mode', 'speed', 'move', 'custom-colors', 'safe-area', 'paused',
+  'density', 'scale', 'size-mode', 'speed', 'move', 'custom-colors', 'safe-area', 'safe-zones',
+  'live', 'time', 'loop', 'aspect', 'paused',
   'shapes', 'registry-data', 'registry', 'background', 'text-color', 'muted-color',
   'accent-color', 'glow-color', 'scrim-color', 'scrim', 'headline', 'text',
   'text-accent', 'subtext', 'description', 'eyebrow', 'text-position', 'text-align',
@@ -39,7 +40,8 @@ const OPTION_ALIASES = {
   fontWeight: 'font-weight',
   shapeSet: 'shape-set',
   sizeMode: 'size-mode',
-  safeArea: 'safe-area'
+  safeArea: 'safe-area',
+  safeZones: 'safe-zones'
 };
 
 // These aliases use different attributes. Setting one clears the other so a
@@ -53,6 +55,103 @@ const ATTRIBUTE_ALIASES = {
   registry: ['registry-data']
 };
 
+// Approximate platform UI bands for 9:16 video. Values are percentages of the
+// host box. They are deliberately conservative: keeping shapes out of these
+// areas prevents captions, buttons, and navigation from fighting the art.
+export const SAFE_ZONE_PRESETS = {
+  tiktok: [
+    { top: 0, right: 100, bottom: 10, left: 0 },
+    { top: 78, right: 100, bottom: 100, left: 0 },
+    { top: 30, right: 100, bottom: 82, left: 86 }
+  ],
+  reels: [
+    { top: 0, right: 100, bottom: 12, left: 0 },
+    { top: 80, right: 100, bottom: 100, left: 0 },
+    { top: 30, right: 100, bottom: 84, left: 86 }
+  ],
+  shorts: [
+    { top: 0, right: 100, bottom: 10, left: 0 },
+    { top: 80, right: 100, bottom: 100, left: 0 },
+    { top: 30, right: 100, bottom: 84, left: 88 }
+  ],
+  story: [
+    { top: 0, right: 100, bottom: 12, left: 0 },
+    { top: 82, right: 100, bottom: 100, left: 0 }
+  ]
+};
+
+const ASPECTS = new Set(['9:16', '16:9', '1:1', '4:5']);
+
+function readOptionalNumber(value, min, max) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.min(max, Math.max(min, number));
+}
+
+function readLive(value) {
+  if (value === null || value === undefined) return true;
+  const token = String(value).trim().toLowerCase();
+  return !(token === 'off' || token === 'false' || token === '0' || token === 'no');
+}
+
+function readLoop(value) {
+  if (value === null || value === undefined) return 0;
+  if (String(value).trim() === '') return 10;
+  return readNumber(value, 0, 0, 600);
+}
+
+function normalizeAspect(value) {
+  const token = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return ASPECTS.has(token) ? token : '';
+}
+
+function addSafeZone(zones, rect) {
+  if (!rect || typeof rect !== 'object' || Array.isArray(rect)) return;
+  const top = readNumber(rect.top, 0, 0, 100);
+  const right = readNumber(rect.right, 100, 0, 100);
+  const bottom = readNumber(rect.bottom, 100, 0, 100);
+  const left = readNumber(rect.left, 0, 0, 100);
+  if (right <= left || bottom <= top) return;
+  zones.push({ top, right, bottom, left });
+}
+
+/**
+ * Parse the `safe-zones` attribute. Accepts a comma list of preset names
+ * (`tiktok,reels`), a JSON array of names/objects, or an array supplied through
+ * `setOptions()`. Custom objects use percentages from 0 to 100.
+ */
+export function parseSafeZones(raw) {
+  if (!raw) return [];
+  let entries = raw;
+  if (typeof raw === 'string') {
+    const value = raw.trim();
+    if (!value) return [];
+    if (value.startsWith('[')) {
+      try { entries = JSON.parse(value); } catch { return []; }
+    } else {
+      entries = value.split(',').map((entry) => entry.trim()).filter(Boolean);
+    }
+  }
+  if (!Array.isArray(entries)) return [];
+  const zones = [];
+  for (const entry of entries) {
+    if (zones.length >= 12) break;
+    if (typeof entry === 'string') {
+      const preset = SAFE_ZONE_PRESETS[entry.trim().toLowerCase()];
+      if (preset) {
+        for (const rect of preset) {
+          if (zones.length >= 12) break;
+          addSafeZone(zones, rect);
+        }
+      }
+    } else {
+      addSafeZone(zones, entry);
+    }
+  }
+  return zones;
+}
+
 const OVERRIDES = `
   :host {
     display: block;
@@ -63,6 +162,12 @@ const OVERRIDES = `
     contain: layout style paint;
     background: var(--shapy-bg-attr, var(--shapy-bg, #0A0F1E));
   }
+  /* Opt-in aspect ratios. Leave the host alone by default; consumers that set a
+     fixed parent size keep it. */
+  :host([aspect="9:16"]) { aspect-ratio: 9 / 16; height: auto; }
+  :host([aspect="16:9"]) { aspect-ratio: 16 / 9; height: auto; }
+  :host([aspect="1:1"]) { aspect-ratio: 1 / 1; height: auto; }
+  :host([aspect="4:5"]) { aspect-ratio: 4 / 5; height: auto; }
   .app {
     position: absolute !important;
     inset: 0 !important;
@@ -275,6 +380,8 @@ class ShapyBackground extends (typeof HTMLElement !== 'undefined' ? HTMLElement 
     this._lastRole = '';
     this._lastLabel = '';
     this._textEl = null;
+    this._seekTime = null;
+    this._seekFn = null;
   }
 
   connectedCallback() {
@@ -326,6 +433,11 @@ class ShapyBackground extends (typeof HTMLElement !== 'undefined' ? HTMLElement 
       move: readNumber(this.getAttribute('move'), 100, 30, 200),
       customColors: sanitizeColors(this.getAttribute('custom-colors') || '').join(','),
       safeArea: this.hasAttribute('safe-area'),
+      safeZones: parseSafeZones(this.getAttribute('safe-zones')),
+      live: readLive(this.getAttribute('live')),
+      time: readOptionalNumber(this.getAttribute('time'), 0, 86400),
+      loop: readLoop(this.getAttribute('loop')),
+      aspect: normalizeAspect(this.getAttribute('aspect')) || 'auto',
       paused: this.hasAttribute('paused'),
       shapes: parseShapes(this.getAttribute('shapes')),
       registry: parseRegistry(this.getAttribute('registry-data') || this.getAttribute('registry')) || {},
@@ -442,12 +554,15 @@ ${scriptText}
 
     this._applyFn = windowShim.__SHAPY_APPLY__;
     this._destroyFn = windowShim.__SHAPY_DESTROY__;
+    this._seekFn = windowShim.__SHAPY_SEEK__;
     this._cleanup = () => {
       if (resizeObserver) resizeObserver.disconnect();
       globalThis.removeEventListener('resize', onResize);
     };
     this._initialized = true;
     this._syncHostBackground(state);
+
+    if (this._seekTime !== null && this._seekFn) this._seekFn(this._seekTime);
 
     queueMicrotask(() => {
       if (!this.isConnected) return;
@@ -463,6 +578,7 @@ ${scriptText}
     this._syncHostBackground(state);
     this._renderText(state);
     this._applyFn(state);
+    if (this._seekTime !== null && this._seekFn) this._seekFn(this._seekTime);
     this.dispatchEvent(new CustomEvent('shapy:change', {
       detail: { element: this, options: this.getOptions() }
     }));
@@ -560,6 +676,11 @@ ${scriptText}
       move: state.move,
       customColors: state.customColors ? splitColorList(state.customColors) : [],
       safeArea: state.safeArea,
+      safeZones: state.safeZones,
+      live: state.live,
+      time: this._seekTime !== null ? this._seekTime : state.time,
+      loop: state.loop,
+      aspect: state.aspect,
       paused: state.paused,
       background: state.background,
       textColor: state.textColor,
@@ -581,9 +702,16 @@ ${scriptText}
   }
 
   setOptions(options = {}) {
+    if (Object.prototype.hasOwnProperty.call(options, 'time')) this._seekTime = null;
     for (const [key, value] of Object.entries(options)) {
       const attribute = OPTION_ALIASES[key] || toAttributeName(key);
       for (const alias of ATTRIBUTE_ALIASES[attribute] || []) this.removeAttribute(alias);
+      // `live: false` is a natural way to ask for deterministic mode even
+      // though false normally removes an option.
+      if (attribute === 'live' && value === false) {
+        this.setAttribute('live', 'off');
+        continue;
+      }
       if (value === undefined || value === null || value === false) {
         this.removeAttribute(attribute);
         continue;
@@ -609,6 +737,28 @@ ${scriptText}
     return this;
   }
 
+  /**
+   * Freeze the renderer at an exact timeline position, in seconds. Returns a
+   * promise that resolves after the frame has been painted. Pass `null` to
+   * resume the normal animation timeline.
+   */
+  async seek(seconds) {
+    if (seconds === null || seconds === undefined || seconds === '') {
+      this._seekTime = null;
+      if (this._initialized && this._seekFn) await this._seekFn(null);
+      return this;
+    }
+    const value = Number(seconds);
+    if (!Number.isFinite(value)) {
+      throw new TypeError('seek(seconds) expects a finite number or null');
+    }
+    const loop = readLoop(this.getAttribute('loop'));
+    this._seekTime = loop > 0 ? ((value % loop) + loop) % loop : Math.max(0, value);
+    if (!this._initialized && this.isConnected) this._init();
+    if (this._initialized && this._seekFn) await this._seekFn(this._seekTime);
+    return this;
+  }
+
   _destroy() {
     clearTimeout(this._renderTimer);
     if (this._destroyFn) {
@@ -620,6 +770,7 @@ ${scriptText}
       this._cleanup = null;
     }
     this._applyFn = null;
+    this._seekFn = null;
     this._initialized = false;
     this._textEl = null;
     this.style.removeProperty('--shapy-bg-attr');

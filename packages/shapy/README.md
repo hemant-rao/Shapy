@@ -24,7 +24,7 @@ overlay, so a single element can be a complete hero background.
 | --- | --- |
 | [Install](#install) · [Quick start](#quick-start) | Get running in 2 minutes |
 | [What you can control](#what-you-can-control) · [Attributes](#attributes) | Every option and default |
-| [Text overlay](#text-overlay) · [Theming](#theming) | Complete heroes |
+| [Deterministic frames and video](#deterministic-frames-and-video) · [Text overlay](#text-overlay) · [Theming](#theming) | Capture, text, colors |
 | [Custom shapes, images, and icons](#custom-shapes-images-and-icons) · [Optional stickers](#optional-stickers) | Your own media |
 | [JavaScript API](#javascript-api) · [TypeScript](#typescript) | Programmatic control |
 | [Troubleshooting](#troubleshooting) | Fixes |
@@ -84,8 +84,10 @@ shapy-background {
   in any of nine spots. Text is plain text, never HTML.
 - **The media:** built-in shapes and emoji, the optional sticker registry, your
   own image URLs, and safe inline SVG icons built from path data.
-- **The API:** `setOptions()`, `getOptions()`, `refresh()`, `shapy:ready`, and
-  `shapy:change`.
+- **The API:** `setOptions()`, `getOptions()`, `seek()`, `refresh()`,
+  `shapy:ready`, and `shapy:change`.
+- **Video and stills:** `live="off"`, `time`, seamless `loop`, 9:16 safe zones,
+  and exact frame capture with `seek()`.
 - **The hooks:** `::part(text)`, `::part(eyebrow)`, `::part(headline)`,
   `::part(body)`, and the `--shapy-*` host variables.
 
@@ -111,6 +113,11 @@ shapy-background {
 | `move` | `100` | 30–200. Movement distance multiplier. |
 | `custom-colors` | empty | Comma-separated CSS colors. Unsafe or invalid tokens are dropped. |
 | `safe-area` | off | Boolean attribute. Dims shapes behind the visible text overlay. |
+| `safe-zones` | empty | Dims shapes inside platform UI bands. Presets: `tiktok`, `reels`, `shorts`, `story`; or a JSON array of `{top,right,bottom,left}` percentages. |
+| `live` | on | `off` disables the periodic live mutations. Animations keep running unless `paused` or `time` is set. |
+| `time` | unset | Freezes the timeline at an exact second. Implies deterministic mode. |
+| `loop` | off | Seamless loop period in seconds. Bare `loop` uses 10 seconds. Loop mode disables live mutations. |
+| `aspect` | `auto` | `auto`, `9:16`, `16:9`, `1:1`, or `4:5`. Sets the host aspect ratio when the parent allows automatic height. |
 | `paused` | off | Boolean attribute. Pauses all animations. |
 
 ### Colors
@@ -151,6 +158,81 @@ Boolean attributes are enabled by presence:
 ```html
 <shapy-background safe-area paused scrim></shapy-background>
 ```
+
+## Deterministic frames and video
+
+Shapy can be the visual source for a video pipeline. Use `live="off"` to stop the
+periodic composition mutations, and `seek()` to freeze an exact frame:
+
+```html
+<shapy-background
+  seed="reel-01"
+  palette="ocean"
+  live="off"
+  loop="8"
+  safe-zones="tiktok"
+  aspect="9:16"
+  style="width: 100%; display: block;"
+></shapy-background>
+```
+
+```js
+const element = document.querySelector('shapy-background');
+
+await element.seek(2.5);   // freeze at 2.5 seconds
+// capture the element with your screenshot or recording tool
+
+await element.seek(null);  // resume the live timeline
+```
+
+- `live="off"` keeps the seeded composition fixed. Only the CSS animations move.
+- `time="4"` is the declarative equivalent of `seek(4)`.
+- `loop="8"` makes every animation duration divide 8 seconds exactly, so the
+  frame at `8s` matches `0s`. `seek()` wraps around the loop.
+- `safe-zones` accepts a comma list of presets or a JSON array of custom
+  rectangles. Custom values are percentages of the host box:
+
+  ```html
+  <shapy-background
+    safe-zones='[{"top":0,"right":100,"bottom":15,"left":0}]'
+  ></shapy-background>
+  ```
+
+- `aspect="9:16"` sets an aspect ratio on the host. For a full-bleed video, size
+  a wrapper to 1080×1920 instead and let the element fill it.
+- `paused` freezes animations but does not disable live mutations. Use
+  `live="off"` or `time` for reproducible output.
+
+### Seed stability
+
+A seed is stable within an engine version. The same seed, options, viewport,
+device pixel ratio, and `SHAPY_ENGINE_VERSION` produce the same static
+composition and the same `seek()` frames. Package patches and minors keep the
+engine version; any change that alters generated output bumps the engine version
+and the package major version. Live mutations are intentionally non-deterministic
+and are outside this contract. See
+[Seed stability](https://github.com/hemant-rao/Shapy/blob/main/docs/SEED_STABILITY.md).
+
+## Video export
+
+The core package has no encoder and stays zero-dependency. Use the separate
+`shapy-render` package for MP4, WebM, or PNG sequences:
+
+```bash
+npm install shapy shapy-render
+npx playwright install chromium
+npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
+```
+
+- MP4 needs a system `ffmpeg` with `libx264`.
+- Non-alpha WebM VP9 works with Playwright's bundled ffmpeg. Alpha WebM needs a
+  full ffmpeg with PNG decoding.
+- Alpha is supported in WebM and PNG, not MP4.
+- Keep `--duration` a multiple of `--loop` for a clean repeat.
+- `shapy-render` captures with `live="off"` and `seek()` for deterministic frames.
+
+See the [shapy-render README](https://github.com/hemant-rao/Shapy/tree/main/packages/shapy-render#readme)
+for the CLI and library API.
 
 ## Text overlay
 
@@ -462,6 +544,19 @@ Forces a re-render with the current attributes and returns the element.
 element.refresh();
 ```
 
+### `seek(seconds)`
+
+Freezes the renderer at an exact timeline position. The promise resolves after
+the frame has been painted. Pass `null` to resume the live timeline.
+
+```js
+await element.seek(3.5);
+await element.seek(null);
+```
+
+`seek()` does not rewrite the `time` attribute, so repeated frame captures do not
+trigger a full re-render. It does disable live mutations while frozen.
+
 ### Events
 
 ```js
@@ -551,7 +646,7 @@ Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
 
 | Import | What you get |
 | --- | --- |
-| `shapy` | Registers `<shapy-background>`, and exports `createShapy()`, `createSeed()`, and the catalog helpers. |
+| `shapy` | Registers `<shapy-background>`, and exports `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and the catalog helpers. |
 | `shapy/element` | Registers `<shapy-background>` only. |
 | `shapy/catalog` | Shape and emoji catalog data without registering the element. |
 | `shapy/stickers` | Sticker catalog, serializable registry, and helpers. |

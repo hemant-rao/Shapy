@@ -369,6 +369,92 @@ background.toggleAttribute('paused', true);  // pause
 background.toggleAttribute('paused', false); // resume
 ```
 
+`paused` only freezes the animations. The renderer can still make periodic live
+changes. For reproducible stills and video, use `live="off"` or `time`.
+
+### Freeze an exact frame
+
+Use `time` or `seek()` when you need the same frame every time:
+
+```html
+<shapy-background
+  seed="frame-demo"
+  live="off"
+  time="2.5"
+></shapy-background>
+```
+
+```js
+const background = document.querySelector('shapy-background');
+
+await background.seek(2.5);  // freeze at 2.5 seconds
+// capture the element with your screenshot tool
+
+await background.seek(null); // resume the timeline
+```
+
+`seek()` resolves after the frame has been painted and does not rewrite the
+`time` attribute, so repeated captures do not trigger a full re-render.
+
+### Make a seamless loop
+
+```html
+<shapy-background seed="loop-demo" live="off" loop="8"></shapy-background>
+```
+
+`loop="8"` makes every animation duration divide 8 seconds exactly. Alternate
+animations use an even number of cycles, so the frame at 8 seconds matches the
+frame at 0 seconds. A bare `loop` attribute means 10 seconds. `seek()` wraps
+around the loop period. When exporting, keep the clip duration an exact multiple
+of the loop period for a clean repeat.
+
+### Create a 9:16 clip with safe zones
+
+```html
+<shapy-background
+  seed="reel-01"
+  palette="ocean"
+  live="off"
+  loop="8"
+  aspect="9:16"
+  safe-zones="tiktok"
+  style="width: 100%; display: block;"
+></shapy-background>
+```
+
+`safe-zones` accepts `tiktok`, `reels`, `shorts`, or `story`, and you can combine
+presets: `safe-zones="tiktok,reels"`. Custom rectangles use percentages of the
+host box:
+
+```html
+<shapy-background
+  safe-zones='[{"top":0,"right":100,"bottom":12,"left":0},{"top":80,"right":100,"bottom":100,"left":0}]'
+></shapy-background>
+```
+
+For a full-bleed 1080×1920 video, size a wrapper to 1080×1920 and let the element
+fill it instead of relying on `aspect`.
+
+### Export a video
+
+The core package has no encoder and stays zero-dependency. Use the separate
+`shapy-render` package to capture frames with Playwright:
+
+```bash
+npm install shapy shapy-render
+npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
+```
+
+- MP4 needs a system `ffmpeg` with an H.264 encoder such as `libx264`.
+- Non-alpha WebM VP9 works with the ffmpeg bundled by Playwright. Alpha WebM
+  needs a full ffmpeg with PNG decoding.
+- Alpha is supported in WebM VP9 and PNG sequences, not MP4.
+- Use `--format png` for a PNG sequence or `--poster poster.png` for a still.
+- Keep the clip duration an exact multiple of `--loop` for a clean repeat.
+
+See the [shapy-render README](../packages/shapy-render/README.md) for the full
+CLI and library API.
+
 ### Add stickers
 
 Stickers are optional and ship inside the same package.
@@ -581,6 +667,13 @@ console.log(options.seed, options.density, options.customColors);
 background.refresh();
 ```
 
+Seek a deterministic frame:
+
+```js
+await background.seek(3.5);
+await background.seek(null);
+```
+
 Listen for lifecycle events:
 
 ```js
@@ -698,6 +791,18 @@ This registers `<shapy-background>` without importing the catalog exports.
 
 <!-- Paused background -->
 <shapy-background paused></shapy-background>
+
+<!-- Deterministic frame -->
+<shapy-background live="off" time="2.5"></shapy-background>
+
+<!-- Seamless 9:16 clip -->
+<shapy-background
+  seed="reel-01"
+  aspect="9:16"
+  live="off"
+  loop="8"
+  safe-zones="tiktok"
+></shapy-background>
 
 <!-- Complete hero with text and theming -->
 <shapy-background

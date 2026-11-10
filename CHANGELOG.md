@@ -20,18 +20,46 @@ the version that will be published after the final manual review.
 - A zero-dependency Node test suite in `tests/package.test.mjs` covering seed
   generation, catalog counts, sticker serialization, package exports, metadata,
   and documentation attribution.
+- Fast `shapy-render` tests in `tests/render.test.mjs` covering invalid option
+  rejection, CLI help/version/unknown-flag behavior, and output-format inference.
+- An opt-in export E2E suite in `tests/render.e2e.test.mjs` covering loop-boundary
+  frame equality, WebM output, RGBA alpha PNG, and poster generation.
+- `engineVersion` in the `shapy-render` result, so captured output records the
+  core `SHAPY_ENGINE_VERSION` that produced it.
+- A manual `workflow_dispatch` CI job for the render E2E suite with Chromium and
+  a system ffmpeg.
 - A `./package.json` export so tools can read package metadata.
-- Contents tables and package-export documentation in both READMEs.
+- Contents tables and package-export documentation in the repository, core, and
+  render READMEs.
+- Deterministic timeline controls: `live`, `time`, `loop`, `aspect`, and the
+  `seek(seconds)` element method. `live="off"` stops live composition mutations;
+  `time` freezes an exact second; `loop` quantizes animation durations to a
+  seamless period; `seek(null)` resumes.
+- `safe-zones` with `tiktok`, `reels`, `shorts`, and `story` presets plus custom
+  percentage rectangles, alongside the existing `safe-area` text protection.
+- `SHAPY_ENGINE_VERSION` and `docs/SEED_STABILITY.md`, which scope seed and
+  seek-frame stability to an engine major version.
+- `packages/shapy-render`, an optional Playwright-based package for MP4, WebM,
+  and PNG export, with poster frames and alpha support through WebM VP9 or PNG.
+- Export documentation covering deterministic capture, 9:16 recipes, alpha
+  limits (including the alpha WebM PNG-decoder requirement), and the external
+  `libx264` requirement for MP4.
 
 ### Changed
 
-- Both READMEs now follow the same structure and voice as the
-  `universal-toast-message` documentation: sponsor banner, contents table,
-  support section, sponsor section, and author footer.
+- The repository, core, and render READMEs now follow the same structure and
+  voice as the `universal-toast-message` documentation: sponsor banner, contents
+  table, support section, sponsor section, and author footer.
 - The license copyright holder is now Hemant Rao.
 - `npm run verify` runs the Node test suite before building and packing.
 - CI runs `npm test` as part of verification.
 - Security policy supported versions now track the `1.0.x` line.
+- Live updates no longer run when `time`, `loop`, or `live="off"` is active, so
+  deterministic captures stay stable.
+- `npm test` now runs the core and fast render unit tests. `npm run test:e2e`
+  runs the opt-in export suite.
+- `npm run verify` and `npm run pack:check` cover both the core and render
+  packages. `shapy-render` captures with `live="off"` and `seek()`.
 
 ### Fixed
 
@@ -39,6 +67,14 @@ the version that will be published after the final manual review.
   started guide.
 - Corrected the version and documentation metadata so the package, lockfile,
   changelog, and security policy agree.
+- `shapy-render` now forwards the top-level `loop` option/`--loop` flag to the
+  element, so rendered clips actually use the requested loop period.
+- Alpha captures hide the solid background, scrim, and grain layers instead of
+  compositing them into the transparent PNG.
+- `shapy-render` validates the poster extension before capture, so invalid
+  poster paths fail before rendering frames.
+- WebM export falls back to JPEG frames when the available ffmpeg lacks a PNG
+  decoder, keeping Playwright's bundled ffmpeg usable.
 
 ## [0.2.0] - 2026-11-10
 

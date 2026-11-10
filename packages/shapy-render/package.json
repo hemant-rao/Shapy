@@ -1,0 +1,64 @@
+{
+  "name": "shapy-render",
+  "version": "1.0.0",
+  "description": "Export Shapy generative backgrounds to MP4, WebM, and PNG with Playwright.",
+  "author": {
+    "name": "Hemant Rao",
+    "url": "https://github.com/hemant-rao"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/hemant-rao"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemant-rao/Shapy.git",
+    "directory": "packages/shapy-render"
+  },
+  "homepage": "https://github.com/hemant-rao/Shapy/tree/main/packages/shapy-render#readme",
+  "bugs": {
+    "url": "https://github.com/hemant-rao/Shapy/issues"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./index.d.ts",
+  "bin": {
+    "shapy-render": "./bin/shapy-render.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "bin",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "shapy",
+    "video",
+    "export",
+    "mp4",
+    "webm",
+    "png",
+    "playwright",
+    "generative",
+    "background"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "playwright": "^1.65.0"
+  },
+  "peerDependencies": {
+    "shapy": ">=1.0.0"
+  },
+  "license": "MIT"
+}

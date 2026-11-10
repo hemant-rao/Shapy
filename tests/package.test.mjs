@@ -5,6 +5,11 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { createSeed } from '../packages/shapy/src/seed.js';
+import { SHAPY_ENGINE_VERSION } from '../packages/shapy/src/index.js';
+import {
+  SAFE_ZONE_PRESETS,
+  parseSafeZones
+} from '../packages/shapy/src/shapy-bg.js';
 import {
   ALL_CORE_SHAPE_KEYS,
   CORE_SHAPE_KEYS,
@@ -28,6 +33,28 @@ test('createSeed returns unique 32-character hex seeds', () => {
 
   assert.equal(seeds.size, 64);
   for (const seed of seeds) assert.match(seed, /^[0-9a-f]{32}$/);
+});
+
+test('engine version and safe-zone parsing are stable', () => {
+  assert.equal(SHAPY_ENGINE_VERSION, 1);
+  assert.deepEqual(
+    Object.keys(SAFE_ZONE_PRESETS).sort(),
+    ['reels', 'shorts', 'story', 'tiktok']
+  );
+  assert.equal(parseSafeZones('tiktok').length, 3);
+  assert.equal(parseSafeZones('tiktok,reels').length, 6);
+
+  assert.deepEqual(
+    parseSafeZones('[{"top":0,"right":100,"bottom":20,"left":0},{"top":90,"right":50,"bottom":80,"left":10}]'),
+    [{ top: 0, right: 100, bottom: 20, left: 0 }]
+  );
+  assert.deepEqual(
+    parseSafeZones([{ top: '5', right: '95', bottom: '95', left: '5' }]),
+    [{ top: 5, right: 95, bottom: 95, left: 5 }]
+  );
+  assert.deepEqual(parseSafeZones('unknown'), []);
+  assert.deepEqual(parseSafeZones('[broken'), []);
+  assert.deepEqual(parseSafeZones(''), []);
 });
 
 test('catalog counts and keys match the documented shape pool', () => {
