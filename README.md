@@ -768,7 +768,8 @@ Shapy-code/
 │  ├─ CODEOWNERS               Maintainer review ownership
 │  ├─ ISSUE_TEMPLATE/          Bug and feature request forms
 │  ├─ PULL_REQUEST_TEMPLATE.md Pull request checklist
-│  └─ workflows/ci.yml         CI
+│  ├─ dependabot.yml           Weekly dependency update PRs
+│  └─ workflows/ci.yml         CI + dependency audit
 ├─ CHANGELOG.md                Change history
 ├─ CODE_OF_CONDUCT.md          Community standards
 ├─ CONTRIBUTING.md             Contribution guide

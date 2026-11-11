@@ -193,6 +193,12 @@ operating systems. See
 - Playwright Chromium
 - ffmpeg with `libx264` for MP4
 
+## Security
+
+Report vulnerabilities privately through the
+[security policy](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md).
+Do not open a public issue for a security problem.
+
 ## License
 
 MIT © [Hemant Rao](https://github.com/hemant-rao). Sponsored by

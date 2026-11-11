@@ -17,6 +17,10 @@ the version that will be published after the final manual review.
 - Community health files: `CONTRIBUTING.md`, `SECURITY.md`,
   `CODE_OF_CONDUCT.md`, `.github/FUNDING.yml`, `.github/CODEOWNERS`, issue
   templates, and a pull request template.
+- Security policy coverage for `shapy-render`, including its loopback-only
+  capture server, Playwright/Chromium boundary, and external ffmpeg execution.
+- A Dependabot configuration and an `npm audit --audit-level=high` CI step, so
+  dependency advisories are tracked continuously.
 - A zero-dependency Node test suite in `tests/package.test.mjs` covering seed
   generation, catalog counts, sticker serialization, package exports, metadata,
   and documentation attribution.

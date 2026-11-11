@@ -1,6 +1,6 @@
 # Shapy — AI Context
 
-Last updated: 2026-11-10
+Last updated: 2026-11-12
 
 This document is the fast path for future AI agents. Read it before opening the
 source. Update it after every architectural or behavioral change.
@@ -63,12 +63,14 @@ Keep the author, sponsor, and funding text consistent across `README.md`,
 | `tests/render.e2e.test.mjs` | Opt-in Playwright/ffmpeg test for loop closure (including high-speed loops and compositor seeks), WebM, MP4, alpha PNG, alpha WebM, and poster output. |
 | `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy/stickers`. |
 | `CONTRIBUTING.md` | Contribution workflow, local setup, code rules, testing, and release checklist. |
-| `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model. |
+| `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model for both packages. |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 community standards. |
 | `.github/FUNDING.yml` | GitHub Sponsors metadata. |
 | `.github/CODEOWNERS` | Maintainer review ownership. |
 | `.github/ISSUE_TEMPLATE/` | Bug report, feature request, and contact-link forms. |
 | `.github/PULL_REQUEST_TEMPLATE.md` | Pull request checklist. |
+| `.github/workflows/ci.yml` | CI: `npm run verify`, generated-file check, dependency audit, and the manual render E2E job. |
+| `.github/dependabot.yml` | Weekly npm and GitHub Actions dependency update PRs. |
 | `apps/demo/src/pages/Home.vue` | Background-only demo. |
 | `apps/demo/src/pages/Config.vue` | Full control panel + shape picker. |
 | `apps/demo/src/App.vue` | Floating navigation shell. |
@@ -432,6 +434,10 @@ package metadata, and documentation attribution. The render suite covers invalid
 option rejection, CLI help/version/error handling, and output-format inference
 without launching a browser. `tests/render.e2e.test.mjs` is not part of
 `npm test`.
+
+CI runs `npm run verify` and `npm audit --audit-level=high` on every push and
+pull request. Dependabot opens weekly npm and GitHub Actions update pull
+requests.
 
 Run the opt-in export E2E test when Playwright Chromium and an ffmpeg with
 `libvpx-vp9` are available:

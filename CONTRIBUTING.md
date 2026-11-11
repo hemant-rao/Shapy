@@ -66,9 +66,10 @@ Open the URL Vite prints, ending in `/examples/minimal.html`.
 | `packages/shapy/src/catalog.js` | Core shape and emoji catalog. |
 | `packages/shapy/src/stickers.js` | Optional sticker registry (`shapy/stickers`). |
 | `packages/shapy/index.d.ts` | Public TypeScript declarations. |
+| `packages/shapy-render` | Optional Node export package: Playwright capture, ffmpeg encoding, and CLI. |
 | `apps/demo` | Private Vue 3 demo and control panel. |
 | `docs` | Getting started, architecture, and uniqueness documentation. |
-| `tests` | Node test suite for the package surface. |
+| `tests` | Core and fast render test suites, plus the opt-in export E2E test. |
 
 `packages/shapy/src/shapy-template.js` and `examples/standalone.html` are
 generated. Never edit them by hand. After changing the renderer source, run:
@@ -79,7 +80,9 @@ npm run build:template
 
 ## Rules for code changes
 
-1. **Keep the package zero-dependency.** Do not add a runtime dependency.
+1. **Keep the core package zero-dependency.** Do not add a runtime dependency to
+   `shapy`. `shapy-render` may only rely on its Playwright-based capture
+   toolchain and must not become a dependency of the core package.
 2. **Keep the public API backward-compatible.** A breaking change needs a clear
    reason and a changelog entry.
 3. **Treat all attribute data as untrusted.**
@@ -120,6 +123,10 @@ npm run verify
 `verify` regenerates the template, checks documentation and package metadata,
 runs the tests, builds the Vue demo, and dry-runs both npm packages.
 
+CI runs `npm run verify` and `npm audit --audit-level=high` on every push and
+pull request. Dependabot opens weekly npm and GitHub Actions update pull
+requests.
+
 For rendering changes, also check the demo at:
 
 - desktop `1350x800`
@@ -136,6 +143,7 @@ Every user-visible change needs documentation:
 - `CHANGELOG.md` for the change itself.
 - `README.md` for repository-level usage.
 - `packages/shapy/README.md` for the npm package page.
+- `packages/shapy-render/README.md` for the export package page.
 - `docs/GETTING_STARTED.md` for setup and recipes.
 - `docs/AI_CONTEXT.md` for architecture, file layout, and known limitations.
 - `docs/UNIQUENESS.md` when shape, emoji, sticker, or setting counts change.
