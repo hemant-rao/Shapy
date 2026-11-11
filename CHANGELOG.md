@@ -2,10 +2,10 @@
 
 All notable changes to Shapy are documented here.
 
-## [1.0.0] - 2026-11-10
+## [1.0.0] - 2026-11-12
 
-The first production-ready release. The package is not published yet; 1.0.0 is
-the version that will be published after the final manual review.
+The first production-ready release. Published on npm as `shapy-bg@1.0.0` and
+`shapy-render@1.0.0`.
 
 ### Added
 
