@@ -52,6 +52,6 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ['shapy']
+    exclude: ['shapy-bg']
   }
 });

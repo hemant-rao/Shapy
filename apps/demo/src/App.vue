@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import 'shapy';
+import 'shapy-bg';
 </script>
 
 <style>

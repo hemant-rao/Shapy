@@ -28,11 +28,11 @@ Read it before touching code.
 4. **Never assume.** Inspect the implementation and test the behavior.
 5. **No extra code.** Prefer the smallest change that satisfies the requirement.
 6. **Never edit generated files by hand.**
-   - `packages/shapy/src/shapy-template.js` is generated from
-     `packages/shapy/src/shapy-index.html`.
+   - `packages/shapy-bg/src/shapy-template.js` is generated from
+     `packages/shapy-bg/src/shapy-index.html`.
    - `examples/standalone.html` is generated from the same source.
 7. **Edit the renderer in one place:**
-   `packages/shapy/src/shapy-index.html`.
+   `packages/shapy-bg/src/shapy-index.html`.
 8. **Regenerate after renderer edits:**
    ```bash
    npm run build:template
@@ -62,7 +62,7 @@ Read it before touching code.
     READMEs, all `LICENSE` files, the root/core/render package manifests,
     `.github/FUNDING.yml`, `CONTRIBUTING.md`, `SECURITY.md`, and
     `CODE_OF_CONDUCT.md`. Do not remove the sponsor sections.
-14. **Version policy:** the `shapy` and `shapy-render` versions are `1.0.0` until
+14. **Version policy:** the `shapy-bg` and `shapy-render` versions are `1.0.0` until
     the owner explicitly publishes or asks for a bump. Do not bump them during
     documentation or production-readiness work.
 
@@ -70,14 +70,14 @@ Read it before touching code.
 
 | Concern | File |
 | --- | --- |
-| Custom element + attributes | `packages/shapy/src/shapy-bg.js` |
-| Public JS API | `packages/shapy/src/index.js` |
-| Public types | `packages/shapy/index.d.ts`, `catalog.d.ts` |
-| Renderer source | `packages/shapy/src/shapy-index.html` |
-| Generated renderer | `packages/shapy/src/shapy-template.js` |
+| Custom element + attributes | `packages/shapy-bg/src/shapy-bg.js` |
+| Public JS API | `packages/shapy-bg/src/index.js` |
+| Public types | `packages/shapy-bg/index.d.ts`, `catalog.d.ts` |
+| Renderer source | `packages/shapy-bg/src/shapy-index.html` |
+| Generated renderer | `packages/shapy-bg/src/shapy-template.js` |
 | Generated standalone demo | `examples/standalone.html` |
-| Shape + emoji catalog | `packages/shapy/src/catalog.js` |
-| Optional stickers | `packages/shapy/src/stickers.js` (exposed as `shapy/stickers`) |
+| Shape + emoji catalog | `packages/shapy-bg/src/catalog.js` |
+| Optional stickers | `packages/shapy-bg/src/stickers.js` (exposed as `shapy-bg/stickers`) |
 | Demo config UI | `apps/demo/src/pages/Config.vue` |
 | Demo background page | `apps/demo/src/pages/Home.vue` |
 | Beginner guide | `docs/GETTING_STARTED.md` |
@@ -93,7 +93,7 @@ Read it before touching code.
 | Security policy | `SECURITY.md` |
 | Community standards | `CODE_OF_CONDUCT.md` |
 | Sponsorship metadata | `.github/FUNDING.yml` |
-| Docs | `README.md`, `packages/shapy/README.md`, `packages/shapy-render/README.md`, `docs/`, `CHANGELOG.md` |
+| Docs | `README.md`, `packages/shapy-bg/README.md`, `packages/shapy-render/README.md`, `docs/`, `CHANGELOG.md` |
 
 ## Change workflow
 
@@ -140,5 +140,5 @@ Read it before touching code.
 - [ ] `npm run verify` succeeds.
 - [ ] Tarball contents and size reviewed for both packages.
 - [ ] Working tree is clean.
-- [ ] `npm run publish:shapy` and `npm run publish:render` run only after
+- [ ] `npm run publish:shapy-bg` and `npm run publish:render` run only after
       explicit user approval and a successful `npm login`.

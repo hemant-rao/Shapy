@@ -19,9 +19,9 @@ By participating, you agree to follow the [Code of Conduct](./CODE_OF_CONDUCT.md
 
 ## Ways to contribute
 
-- **Report a bug.** Use the [bug report form](https://github.com/hemant-rao/Shapy/issues/new?template=bug_report.yml).
+- **Report a bug.** Use the [bug report form](https://github.com/hemant-rao/shapy-bg/issues/new?template=bug_report.yml).
   Include the version, browser, a minimal reproduction, and console output.
-- **Request a feature.** Use the [feature request form](https://github.com/hemant-rao/Shapy/issues/new?template=feature_request.yml).
+- **Request a feature.** Use the [feature request form](https://github.com/hemant-rao/shapy-bg/issues/new?template=feature_request.yml).
   Describe the problem before the proposed API.
 - **Improve the docs.** Typo fixes, clearer examples, and new recipes are
   welcome. Documentation is part of the product.
@@ -37,7 +37,7 @@ Shapy requires Node.js 20.19 or newer for local development. The published
 package is browser-only and has no runtime dependencies.
 
 ```bash
-git clone https://github.com/hemant-rao/Shapy.git
+git clone https://github.com/hemant-rao/shapy-bg.git
 cd Shapy
 npm install
 ```
@@ -60,18 +60,18 @@ Open the URL Vite prints, ending in `/examples/minimal.html`.
 
 | Path | Purpose |
 | --- | --- |
-| `packages/shapy/src/shapy-index.html` | Renderer source. Edit this file for composition, theming, text, and sanitization changes. |
-| `packages/shapy/src/shapy-bg.js` | Custom element, attribute mapping, lifecycle, methods, and events. |
-| `packages/shapy/src/index.js` | Public `createShapy()` and package exports. |
-| `packages/shapy/src/catalog.js` | Core shape and emoji catalog. |
-| `packages/shapy/src/stickers.js` | Optional sticker registry (`shapy/stickers`). |
-| `packages/shapy/index.d.ts` | Public TypeScript declarations. |
+| `packages/shapy-bg/src/shapy-index.html` | Renderer source. Edit this file for composition, theming, text, and sanitization changes. |
+| `packages/shapy-bg/src/shapy-bg.js` | Custom element, attribute mapping, lifecycle, methods, and events. |
+| `packages/shapy-bg/src/index.js` | Public `createShapy()` and package exports. |
+| `packages/shapy-bg/src/catalog.js` | Core shape and emoji catalog. |
+| `packages/shapy-bg/src/stickers.js` | Optional sticker registry (`shapy-bg/stickers`). |
+| `packages/shapy-bg/index.d.ts` | Public TypeScript declarations. |
 | `packages/shapy-render` | Optional Node export package: Playwright capture, ffmpeg encoding, and CLI. |
 | `apps/demo` | Private Vue 3 demo and control panel. |
 | `docs` | Getting started, architecture, and uniqueness documentation. |
 | `tests` | Core and fast render test suites, plus the opt-in export E2E test. |
 
-`packages/shapy/src/shapy-template.js` and `examples/standalone.html` are
+`packages/shapy-bg/src/shapy-template.js` and `examples/standalone.html` are
 generated. Never edit them by hand. After changing the renderer source, run:
 
 ```bash
@@ -81,7 +81,7 @@ npm run build:template
 ## Rules for code changes
 
 1. **Keep the core package zero-dependency.** Do not add a runtime dependency to
-   `shapy`. `shapy-render` may only rely on its Playwright-based capture
+   `shapy-bg`. `shapy-render` may only rely on its Playwright-based capture
    toolchain and must not become a dependency of the core package.
 2. **Keep the public API backward-compatible.** A breaking change needs a clear
    reason and a changelog entry.
@@ -142,7 +142,7 @@ Every user-visible change needs documentation:
 
 - `CHANGELOG.md` for the change itself.
 - `README.md` for repository-level usage.
-- `packages/shapy/README.md` for the npm package page.
+- `packages/shapy-bg/README.md` for the npm package page.
 - `packages/shapy-render/README.md` for the export package page.
 - `docs/GETTING_STARTED.md` for setup and recipes.
 - `docs/AI_CONTEXT.md` for architecture, file layout, and known limitations.
@@ -166,14 +166,14 @@ The pull request template contains the full checklist.
 
 Maintainers only:
 
-1. Bump the version in `packages/shapy/package.json`.
+1. Bump the version in `packages/shapy-bg/package.json`.
 2. Update `CHANGELOG.md`.
 3. Run `npm run verify`.
-4. Review `npm pack --workspace shapy --dry-run`.
+4. Review `npm pack --workspace shapy-bg --dry-run`.
 5. Publish only after explicit approval and a successful `npm login`:
 
 ```bash
-npm run publish:shapy
+npm run publish:shapy-bg
 ```
 
 Do not publish from a dirty working tree.

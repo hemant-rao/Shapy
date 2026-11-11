@@ -7,10 +7,10 @@ source. Update it after every architectural or behavioral change.
 
 ## What this project is
 
-`shapy` is a zero-dependency Web Component that renders a seedable, animated,
+`shapy-bg` is a zero-dependency Web Component that renders a seedable, animated,
 generative shape background. It also ships:
 
-- `shapy/stickers`: an optional serializable sticker registry, shipped inside
+- `shapy-bg/stickers`: an optional serializable sticker registry, shipped inside
   the core package as a subpath.
 - A Vue demo with two pages: `/` (background only) and `/config` (full control
   panel).
@@ -18,13 +18,13 @@ generative shape background. It also ships:
   from the package renderer source.
 - A small copy-paste example at `examples/minimal.html`.
 
-The repository is a two-workspace monorepo: `packages/shapy` (the npm package)
+The repository is a two-workspace monorepo: `packages/shapy-bg` (the npm package)
 and `apps/demo` (private Vue 3 demo). The Vue demo consumes the package through
-its public exports, including the `shapy/stickers` subpath; there are no Vite
+its public exports, including the `shapy-bg/stickers` subpath; there are no Vite
 source aliases.
 
-The package is pre-publish. The npm name `shapy` is available as of the last
-check. The public repository is `https://github.com/hemant-rao/Shapy`. The
+The package is pre-publish. The npm name `shapy-bg` is available as of the last
+check. The public repository is `https://github.com/hemant-rao/shapy-bg`. The
 version is `1.0.0`; do not bump it until the owner explicitly publishes or asks
 for a version change.
 
@@ -32,36 +32,36 @@ for a version change.
 
 - **Author and maintainer:** Hemant Rao
   (<https://github.com/hemant-rao>).
-- **Repository:** <https://github.com/hemant-rao/Shapy>.
+- **Repository:** <https://github.com/hemant-rao/shapy-bg>.
 - **Sponsor:** Odio Book (<https://odiobook.com>).
 - **Funding:** GitHub Sponsors
   (<https://github.com/sponsors/hemant-rao>).
 - **License:** MIT, copyright Hemant Rao.
-- **Package:** `shapy`, version `1.0.0`, zero runtime dependencies.
+- **Package:** `shapy-bg`, version `1.0.0`, zero runtime dependencies.
 
 Keep the author, sponsor, and funding text consistent across `README.md`,
-`packages/shapy/README.md`, `packages/shapy/package.json`, `package.json`,
-`LICENSE`, `packages/shapy/LICENSE`, `.github/FUNDING.yml`, `CONTRIBUTING.md`,
+`packages/shapy-bg/README.md`, `packages/shapy-bg/package.json`, `package.json`,
+`LICENSE`, `packages/shapy-bg/LICENSE`, `.github/FUNDING.yml`, `CONTRIBUTING.md`,
 `SECURITY.md`, and `CODE_OF_CONDUCT.md`.
 
 ## Repository map
 
 | Path | Purpose |
 | --- | --- |
-| `packages/shapy/src/shapy-bg.js` | Custom element, open shadow root, CSS scoping, document/window shims, lifecycle, theming, text overlay, public methods/events. |
-| `packages/shapy/src/shapy-index.html` | Full renderer template source: composition, theming, text overlay CSS, registry and color sanitization. |
-| `packages/shapy/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
-| `packages/shapy/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
-| `packages/shapy/src/index.js` | `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and catalog re-exports. |
-| `packages/shapy/src/seed.js` | `createSeed()`: 32-character hex seed generator used by the element and the public API. |
-| `packages/shapy/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
-| `packages/shapy/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
+| `packages/shapy-bg/src/shapy-bg.js` | Custom element, open shadow root, CSS scoping, document/window shims, lifecycle, theming, text overlay, public methods/events. |
+| `packages/shapy-bg/src/shapy-index.html` | Full renderer template source: composition, theming, text overlay CSS, registry and color sanitization. |
+| `packages/shapy-bg/src/shapy-template.js` | Generated `SHAPY_HTML` string. Never edit by hand. |
+| `packages/shapy-bg/src/catalog.js` | Core shape groups, emoji pool, key helpers. |
+| `packages/shapy-bg/src/index.js` | `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and catalog re-exports. |
+| `packages/shapy-bg/src/seed.js` | `createSeed()`: 32-character hex seed generator used by the element and the public API. |
+| `packages/shapy-bg/index.d.ts`, `catalog.d.ts`, `stickers.d.ts` | Public TypeScript types. |
+| `packages/shapy-bg/scripts/build-template.mjs` | Generates `shapy-template.js` from `shapy-index.html`. |
 | `scripts/sync-standalone.mjs` | Copies the renderer source to `examples/standalone.html`. |
 | `scripts/check-repo.mjs` | Checks docs links, package exports, generated files, stale paths, author/sponsor metadata, and required community files. |
 | `tests/package.test.mjs` | Core package tests for seed generation, catalog counts, sticker serialization, package exports, metadata, and documentation attribution. |
 | `tests/render.test.mjs` | Fast `shapy-render` tests for input rejection, CLI behavior, and format inference. |
 | `tests/render.e2e.test.mjs` | Opt-in Playwright/ffmpeg test for loop closure (including high-speed loops and compositor seeks), WebM, MP4, alpha PNG, alpha WebM, and poster output. |
-| `packages/shapy/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy/stickers`. |
+| `packages/shapy-bg/src/stickers.js` | `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, `registerStickers(element)`; exposed as `shapy-bg/stickers`. |
 | `CONTRIBUTING.md` | Contribution workflow, local setup, code rules, testing, and release checklist. |
 | `SECURITY.md` | Private vulnerability reporting, supported versions, and the security model for both packages. |
 | `CODE_OF_CONDUCT.md` | Contributor Covenant 2.1 community standards. |
@@ -401,20 +401,20 @@ Shape picker behavior:
   to all shapes and the UI shows a hint.
 - Each group has an `only` button that selects just that group.
 
-`registry-data` is bound from `getRegistryData()` in `shapy/stickers`.
+`registry-data` is bound from `getRegistryData()` in `shapy-bg/stickers`.
 The demo does not yet expose the package's color attributes, text overlay, or
 element methods in its control panel; those are documented in the package
 README.
 
 ## Build
 
-After editing `packages/shapy/src/shapy-index.html`:
+After editing `packages/shapy-bg/src/shapy-index.html`:
 
 ```bash
 npm run build:template
 ```
 
-This writes `packages/shapy/src/shapy-template.js` and syncs
+This writes `packages/shapy-bg/src/shapy-template.js` and syncs
 `examples/standalone.html`. Both files are generated; edit only the package
 renderer source. `npm run verify` regenerates both, runs repository checks, runs
 the Node test suite, builds the Vue demo, and runs `npm pack --dry-run` for both
@@ -526,7 +526,7 @@ Checks that matter:
    inside the renderer are shims, but non-resize listeners are forwarded to the
    real `globalThis`. Custom shape groups are supplied only through
    `registry-data`; there is no global registry.
-5. **Video export is a separate package.** Core `shapy` stays zero-dependency
+5. **Video export is a separate package.** Core `shapy-bg` stays zero-dependency
    and does not bundle an encoder. `packages/shapy-render` uses Playwright for
    frame capture and can emit MP4, WebM, and PNG sequences. The render result
    includes the `SHAPY_ENGINE_VERSION` used for the capture. MP4 alpha is not

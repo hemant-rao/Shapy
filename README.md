@@ -1,8 +1,8 @@
 # Shapy
 
-[![CI](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml/badge.svg)](https://github.com/hemant-rao/Shapy/actions/workflows/ci.yml)
+[![CI](https://github.com/hemant-rao/shapy-bg/actions/workflows/ci.yml/badge.svg)](https://github.com/hemant-rao/shapy-bg/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/hemant-rao/Shapy?style=flat&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
+[![GitHub stars](https://img.shields.io/github/stars/hemant-rao/shapy-bg?style=flat&logo=github&color=444)](https://github.com/hemant-rao/shapy-bg)
 
 **Seedable generative shape backgrounds for the web.**
 
@@ -60,7 +60,7 @@ The repository includes a minimal example that runs without creating a new
 project.
 
 ```bash
-git clone https://github.com/hemant-rao/Shapy.git
+git clone https://github.com/hemant-rao/shapy-bg.git
 cd Shapy
 npm install
 npm run dev:example
@@ -83,7 +83,7 @@ panel. The demo server also serves `/examples/minimal.html` directly.
 ### 1. Install
 
 ```bash
-npm install shapy
+npm install shapy-bg
 ```
 
 Shapy is a browser-only Web Component. It needs Custom Elements and Shadow DOM,
@@ -92,7 +92,7 @@ which are available in current Chrome, Edge, Firefox, and Safari.
 ### 2. Import it once
 
 ```js
-import 'shapy';
+import 'shapy-bg';
 ```
 
 ### 3. Add the element and give it a size
@@ -237,7 +237,7 @@ The core package stays zero-dependency. For MP4, WebM, or PNG output, use the
 separate [`shapy-render`](./packages/shapy-render) package:
 
 ```bash
-npm install shapy shapy-render
+npm install shapy-bg shapy-render
 npx playwright install chromium
 npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
 ```
@@ -299,7 +299,7 @@ element.setAttribute('shapes', JSON.stringify(['circle', 'ring', 'emoji-0']));
 Core shape keys are exported from the catalog:
 
 ```js
-import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy/catalog';
+import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy-bg/catalog';
 
 const geometryKeys = SHAPE_GROUPS.find((group) => group.id === 'geometry').shapes.map((shape) => shape.key);
 const emojiKeys = EMOJI_GROUP.shapes.map((shape) => shape.key);
@@ -335,8 +335,8 @@ contains no valid keys, Shapy falls back to the full shape set.
 ## Optional stickers
 
 ```js
-import 'shapy';
-import { STICKER_REGISTRY } from 'shapy/stickers';
+import 'shapy-bg';
+import { STICKER_REGISTRY } from 'shapy-bg/stickers';
 
 const element = document.querySelector('shapy-background');
 element.setAttribute('registry-data', JSON.stringify(STICKER_REGISTRY));
@@ -351,7 +351,7 @@ element.setAttribute('shape-set', 'custom');
 element.setAttribute('shapes', 'sticker-0,sticker-2,sticker-7');
 ```
 
-`shapy/stickers` exports:
+`shapy-bg/stickers` exports:
 
 - `STICKER_CATALOG` — serializable sticker items.
 - `STICKER_REGISTRY` — a ready-to-serialize registry group.
@@ -360,7 +360,7 @@ element.setAttribute('shapes', 'sticker-0,sticker-2,sticker-7');
   registry. It returns the registry and never writes to `globalThis`.
 
 ```js
-import { registerStickers } from 'shapy/stickers';
+import { registerStickers } from 'shapy-bg/stickers';
 
 const element = document.querySelector('shapy-background');
 registerStickers(element);
@@ -531,7 +531,7 @@ shapy-background::part(body) {
 ## JavaScript API
 
 ```js
-import { createShapy } from 'shapy';
+import { createShapy } from 'shapy-bg';
 
 const background = createShapy();
 
@@ -598,7 +598,7 @@ element.addEventListener('shapy:change', (event) => {
 To create a new pattern, import `createSeed()` and set the `seed` attribute:
 
 ```js
-import { createSeed } from 'shapy';
+import { createSeed } from 'shapy-bg';
 
 element.setAttribute('seed', createSeed());
 ```
@@ -626,7 +626,7 @@ export default {
 
 ```vue
 <script setup>
-import 'shapy';
+import 'shapy-bg';
 </script>
 
 <template>
@@ -700,14 +700,14 @@ npm install
 npm run dev
 ```
 
-The renderer source is `packages/shapy/src/shapy-index.html`. One command
+The renderer source is `packages/shapy-bg/src/shapy-index.html`. One command
 regenerates the package template and the standalone example:
 
 ```bash
 npm run build:template
 ```
 
-Never edit `packages/shapy/src/shapy-template.js` or
+Never edit `packages/shapy-bg/src/shapy-template.js` or
 `examples/standalone.html` by hand. Edit the source HTML and regenerate.
 
 Useful commands:
@@ -720,7 +720,7 @@ npm run test:e2e       # optional render capture test (set SHAPY_RENDER_E2E=1)
 npm run build          # build the Vue demo
 npm run check:repo     # check docs, exports, and generated files
 npm run verify         # regenerate, test, check, build, and dry-run both packages
-npm run pack:shapy     # npm pack the core package
+npm run pack:shapy-bg     # npm pack the core package
 npm run pack:render    # npm pack shapy-render
 npm run pack:check     # dry-run both package tarballs
 ```
@@ -730,7 +730,7 @@ npm run pack:check     # dry-run both package tarballs
 ```
 Shapy-code/
 ├─ packages/
-│  ├─ shapy/                   Published npm package
+│  ├─ shapy-bg/                   Published npm package
 │  │  ├─ src/shapy-bg.js       Custom element + attribute mapping
 │  │  ├─ src/shapy-index.html  Renderer source (edit this)
 │  │  ├─ src/shapy-template.js Generated package template (do not edit)
@@ -785,12 +785,12 @@ Shapy-code/
 ```bash
 npm run verify
 npm run pack:check
-npm run publish:shapy
+npm run publish:shapy-bg
 npm run publish:render
 ```
 
 The repository has two publishable packages. `npm run pack:check` dry-runs both.
-Publish `shapy` and `shapy-render` separately, each after approval.
+Publish `shapy-bg` and `shapy-render` separately, each after approval.
 
 Before publishing:
 
@@ -811,7 +811,7 @@ source, so a stale generated file cannot be published.
 
 Check these in order:
 
-1. Did you import `shapy`?
+1. Did you import `shapy-bg`?
 2. Does `shapy-background` have a size? Try
    `shapy-background { position: fixed; inset: 0; display: block; }`.
 3. Is the element inside the `<body>`?
@@ -828,7 +828,7 @@ You did not pass a `seed`. Shapy generates a fresh seed for each element when
 
 ### Stickers do not appear
 
-Make sure you import from `shapy/stickers`, set `registry-data` to
+Make sure you import from `shapy-bg/stickers`, set `registry-data` to
 `JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"` or use
 `shape-set="custom"` with sticker keys.
 
@@ -861,7 +861,7 @@ to `role="group"` when text is visible, and respects
 - [Security policy](./SECURITY.md) — private vulnerability reporting and the
   security model.
 - [Code of conduct](./CODE_OF_CONDUCT.md) — the standards for this community.
-- [Issues](https://github.com/hemant-rao/Shapy/issues) — bug reports and feature
+- [Issues](https://github.com/hemant-rao/shapy-bg/issues) — bug reports and feature
   requests.
 - [Changelog](./CHANGELOG.md) — every user-visible change.
 
@@ -874,7 +874,7 @@ maintenance:
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hemant-rao)
 &nbsp;
-[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/Shapy?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
+[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/shapy-bg?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/shapy-bg)
 
 **[Become a sponsor](https://github.com/sponsors/hemant-rao)** — one-time or
 monthly, any amount.

@@ -24,7 +24,7 @@ jobs:
       - name: Verify
         run: npm run verify
       - name: Verify generated files are committed
-        run: git diff --exit-code -- packages/shapy/src/shapy-template.js examples/standalone.html
+        run: git diff --exit-code -- packages/shapy-bg/src/shapy-template.js examples/standalone.html
 
   render-e2e:
     if: github.event_name == 'workflow_dispatch'

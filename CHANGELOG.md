@@ -118,7 +118,7 @@ the version that will be published after the final manual review.
 - Single-shape and arbitrary 2/3/4/5+ shape selections via `shape-set="custom"`
   and `shapes`.
 - Group-only presets and `All` / `Clear` actions in the picker.
-- Optional sticker registry exposed as the `shapy/stickers` subpath, with
+- Optional sticker registry exposed as the `shapy-bg/stickers` subpath, with
   `STICKER_CATALOG`, `STICKER_REGISTRY`, `getRegistryData()`, and
   `registerStickers()`.
 - Serializable `registry-data` support for stickers and custom image shapes.
@@ -132,7 +132,7 @@ the version that will be published after the final manual review.
 - The custom element exposes `role="img"` and
   `aria-label="Shapy generative background"` by default; either can be
   overridden by the host.
-- `createSeed()` helper, exported from `shapy`, that returns a fresh
+- `createSeed()` helper, exported from `shapy-bg`, that returns a fresh
   32-character hex seed.
 - Security hardening: custom image URLs in `registry-data` are validated
   (`http(s)`, protocol-relative, relative, and safe `data:image/*` allowed);
@@ -146,10 +146,10 @@ the version that will be published after the final manual review.
 - "How many unique compositions?" section in the repository README with the
   128-bit seed + renderer-settings calculation.
 - Repository metadata (`repository`, `homepage`, `bugs`) for
-  `https://github.com/hemant-rao/Shapy` in the package manifest.
+  `https://github.com/hemant-rao/shapy-bg` in the package manifest.
 - GitHub Actions CI workflow for install, template regeneration, demo build, and
   package dry-run.
-- Root scripts `verify`, `check:repo`, `pack:check`, and `publish:shapy`.
+- Root scripts `verify`, `check:repo`, `pack:check`, and `publish:shapy-bg`.
 - Beginner-friendly step-by-step guide in `docs/GETTING_STARTED.md`, a
   copy-paste `examples/minimal.html`, and the `npm run dev:example` command.
 - Documentation map, quick start, recipes, and troubleshooting sections in the
@@ -194,17 +194,17 @@ the version that will be published after the final manual review.
   registry.
 - Package metadata is publish-ready with `exports`, `types`, `files`,
   `sideEffects`, and `prepack` template generation.
-- Repository organized as a two-workspace monorepo: `packages/shapy` (the
+- Repository organized as a two-workspace monorepo: `packages/shapy-bg` (the
   published package) and `apps/demo` (private Vue 3 demo). The standalone demo
   lives at `examples/standalone.html`, and the changelog is at the repository
   root. The Vue demo consumes the package through its public exports, including
-  the `shapy/stickers` subpath, instead of Vite source aliases.
+  the `shapy-bg/stickers` subpath, instead of Vite source aliases.
 - The standalone `examples/standalone.html` is now generated from
-  `packages/shapy/src/shapy-index.html` by `npm run build:template`, removing
+  `packages/shapy-bg/src/shapy-index.html` by `npm run build:template`, removing
   the manual two-file sync. `npm run verify` now also runs repository checks for
   docs links, package exports, generated files, and stale paths.
-- The optional sticker registry is now part of the core `shapy` package as the
-  `shapy/stickers` subpath. One npm package ships the component, catalog, and
+- The optional sticker registry is now part of the core `shapy-bg` package as the
+  `shapy-bg/stickers` subpath. One npm package ships the component, catalog, and
   sticker registry; `shapy-stickers` is no longer a separate package.
 - The renderer now hashes the full seed string into a 128-bit `sfc32` state;
   URL seeds are accepted up to 64 characters.
@@ -252,7 +252,7 @@ the version that will be published after the final manual review.
 - The `examples/standalone.html` demo and the Vue demo now use an inline
   favicon, removing the `/favicon.ico` 404 from the browser console.
 - Sticker groups fall back gracefully when no sticker registry is provided.
-- `shapy` package no longer references missing `src/index.mjs`,
+- `shapy-bg` package no longer references missing `src/index.mjs`,
   `src/index.d.ts`, or build scripts that were not installed.
 - Root demo and package renderer sources are back in sync.
 - Vue demo package imports no longer depend on local `packages/` source aliases;

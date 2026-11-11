@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { renderTemplate } from '../packages/shapy/scripts/build-template.mjs';
+import { renderTemplate } from '../packages/shapy-bg/scripts/build-template.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const problems = [];
@@ -9,7 +9,7 @@ const checks = [];
 
 const docs = [
   'README.md',
-  'packages/shapy/README.md',
+  'packages/shapy-bg/README.md',
   'packages/shapy-render/README.md',
   'AGENTS.md',
   'CHANGELOG.md',
@@ -74,7 +74,7 @@ for (const doc of docs) {
   else ok(`${doc}: code fences balanced (${fences})`);
 }
 
-const pkgRel = 'packages/shapy/package.json';
+const pkgRel = 'packages/shapy-bg/package.json';
 const pkg = JSON.parse(read(pkgRel));
 const pkgDir = dirname(join(root, pkgRel));
 
@@ -120,8 +120,8 @@ checkGroup(`${pkgRel}: author, funding, version, and license metadata are comple
   }
 
   const lock = JSON.parse(read('package-lock.json'));
-  if (lock.packages?.['packages/shapy']?.version !== pkg.version) {
-    bad('package-lock.json: packages/shapy version does not match package.json');
+  if (lock.packages?.['packages/shapy-bg']?.version !== pkg.version) {
+    bad('package-lock.json: packages/shapy-bg version does not match package.json');
   }
 });
 
@@ -146,7 +146,9 @@ checkGroup(`${renderPkgRel}: metadata, exports, files, and dependencies are vali
   }
   if (!renderPkg.bin?.['shapy-render']) bad(`${renderPkgRel}: missing shapy-render bin`);
   if (!renderPkg.dependencies?.playwright) bad(`${renderPkgRel}: playwright dependency is required`);
-  if (!renderPkg.peerDependencies?.shapy) bad(`${renderPkgRel}: shapy peer dependency is required`);
+  if (!renderPkg.peerDependencies?.['shapy-bg']) {
+    bad(`${renderPkgRel}: shapy-bg peer dependency is required`);
+  }
   if (!renderPkg.exports?.['./package.json']) bad(`${renderPkgRel}: missing ./package.json export`);
 
   for (const entry of renderPkg.files || []) {
@@ -189,7 +191,7 @@ checkGroup('shapy-render reports the core engine version', () => {
 checkGroup('author, sponsor, and funding attribution is consistent', () => {
   const docsWithAttribution = [
     'README.md',
-    'packages/shapy/README.md',
+    'packages/shapy-bg/README.md',
     'packages/shapy-render/README.md',
     'CONTRIBUTING.md',
     'SECURITY.md',
@@ -208,7 +210,7 @@ checkGroup('author, sponsor, and funding attribution is consistent', () => {
 
   for (const readme of [
     'README.md',
-    'packages/shapy/README.md',
+    'packages/shapy-bg/README.md',
     'packages/shapy-render/README.md',
   ]) {
     if (!/https:\/\/github\.com\/sponsors\/hemant-rao/.test(read(readme))) {
@@ -216,7 +218,7 @@ checkGroup('author, sponsor, and funding attribution is consistent', () => {
     }
   }
 
-  for (const license of ['LICENSE', 'packages/shapy/LICENSE', 'packages/shapy-render/LICENSE']) {
+  for (const license of ['LICENSE', 'packages/shapy-bg/LICENSE', 'packages/shapy-render/LICENSE']) {
     if (!/Copyright \(c\) 2026 Hemant Rao/.test(read(license))) {
       bad(`${license}: copyright holder must be Hemant Rao`);
     }
@@ -227,7 +229,7 @@ checkGroup('author, sponsor, and funding attribution is consistent', () => {
   }
 });
 
-const rendererSource = read('packages/shapy/src/shapy-index.html');
+const rendererSource = read('packages/shapy-bg/src/shapy-index.html');
 
 checkGroup('examples/standalone.html matches the renderer source', () => {
   if (read('examples/standalone.html') !== rendererSource) {
@@ -235,11 +237,11 @@ checkGroup('examples/standalone.html matches the renderer source', () => {
   }
 });
 
-checkGroup('packages/shapy/src/shapy-template.js is current', () => {
-  const template = read('packages/shapy/src/shapy-template.js');
+checkGroup('packages/shapy-bg/src/shapy-template.js is current', () => {
+  const template = read('packages/shapy-bg/src/shapy-template.js');
 
   if (template !== renderTemplate(rendererSource)) {
-    bad('packages/shapy/src/shapy-template.js is stale; run npm run build:template');
+    bad('packages/shapy-bg/src/shapy-template.js is stale; run npm run build:template');
   }
 });
 
@@ -270,10 +272,10 @@ const requiredFiles = [
   'examples/minimal.html',
   'examples/standalone.html',
   'apps/demo/package.json',
-  'packages/shapy/package.json',
-  'packages/shapy/src/seed.js',
-  'packages/shapy/src/stickers.js',
-  'packages/shapy/stickers.d.ts',
+  'packages/shapy-bg/package.json',
+  'packages/shapy-bg/src/seed.js',
+  'packages/shapy-bg/src/stickers.js',
+  'packages/shapy-bg/stickers.d.ts',
   'packages/shapy-render/package.json',
   'packages/shapy-render/src/index.js',
   'packages/shapy-render/src/ffmpeg.js',
@@ -294,7 +296,7 @@ checkGroup('required files exist', () => {
 
 const currentDocs = [
   'README.md',
-  'packages/shapy/README.md',
+  'packages/shapy-bg/README.md',
   'packages/shapy-render/README.md',
   'AGENTS.md',
   'CONTRIBUTING.md',
@@ -311,7 +313,7 @@ checkGroup('current docs contain no stale layout or duplication instructions', (
     const text = read(doc);
 
     if (
-      /vue-demo\/|docs\/CHANGELOG|`shapy\/src\/|`shapy\/package\.json|`shapy\/scripts\//.test(
+      /vue-demo\/|docs\/CHANGELOG|`shapy-bg\/src\/|`shapy-bg\/package\.json|`shapy-bg\/scripts\//.test(
         text,
       )
     ) {
@@ -341,10 +343,10 @@ checkGroup('docs contain no machine-specific paths or token-like strings', () =>
 
 checkGroup('package sources contain no TODO/FIXME or eval/new Function', () => {
   for (const file of [
-    'packages/shapy/src/index.js',
-    'packages/shapy/src/shapy-bg.js',
-    'packages/shapy/src/catalog.js',
-    'packages/shapy/src/stickers.js',
+    'packages/shapy-bg/src/index.js',
+    'packages/shapy-bg/src/shapy-bg.js',
+    'packages/shapy-bg/src/catalog.js',
+    'packages/shapy-bg/src/stickers.js',
     'packages/shapy-render/src/index.js',
     'packages/shapy-render/src/ffmpeg.js',
     'packages/shapy-render/src/options.js',
@@ -357,7 +359,7 @@ checkGroup('package sources contain no TODO/FIXME or eval/new Function', () => {
 });
 
 checkGroup('mount() examples pass an element', () => {
-  for (const doc of ['README.md', 'packages/shapy/README.md', 'docs/GETTING_STARTED.md']) {
+  for (const doc of ['README.md', 'packages/shapy-bg/README.md', 'docs/GETTING_STARTED.md']) {
     if (/\.mount\(['"]/.test(read(doc))) {
       bad(`${doc}: mount() example still uses a selector string`);
     }
@@ -365,19 +367,19 @@ checkGroup('mount() examples pass an element', () => {
 });
 
 checkGroup('minimal example imports the package', () => {
-  if (!/from\s+['"]shapy['"]|import\s+['"]shapy['"]/.test(read('examples/minimal.html'))) {
-    bad('examples/minimal.html does not import shapy');
+  if (!/from\s+['"]shapy-bg['"]|import\s+['"]shapy-bg['"]/.test(read('examples/minimal.html'))) {
+    bad('examples/minimal.html does not import shapy-bg');
   }
 });
 
 checkGroup('createSeed is exported and documented', () => {
-  if (!/export\s*\{\s*createSeed\s*\}/.test(read('packages/shapy/src/index.js'))) {
-    bad('packages/shapy/src/index.js does not export createSeed');
+  if (!/export\s*\{\s*createSeed\s*\}/.test(read('packages/shapy-bg/src/index.js'))) {
+    bad('packages/shapy-bg/src/index.js does not export createSeed');
   }
-  if (!/export function createSeed\(\)/.test(read('packages/shapy/index.d.ts'))) {
-    bad('packages/shapy/index.d.ts does not declare createSeed');
+  if (!/export function createSeed\(\)/.test(read('packages/shapy-bg/index.d.ts'))) {
+    bad('packages/shapy-bg/index.d.ts does not declare createSeed');
   }
-  for (const doc of ['README.md', 'packages/shapy/README.md', 'docs/GETTING_STARTED.md']) {
+  for (const doc of ['README.md', 'packages/shapy-bg/README.md', 'docs/GETTING_STARTED.md']) {
     if (!/createSeed/.test(read(doc))) {
       bad(`${doc}: does not document createSeed`);
     }
@@ -385,19 +387,19 @@ checkGroup('createSeed is exported and documented', () => {
 });
 
 checkGroup('engine version and seek API are exported and documented', () => {
-  if (!/export const SHAPY_ENGINE_VERSION\s*=\s*1/.test(read('packages/shapy/src/index.js'))) {
-    bad('packages/shapy/src/index.js does not export SHAPY_ENGINE_VERSION = 1');
+  if (!/export const SHAPY_ENGINE_VERSION\s*=\s*1/.test(read('packages/shapy-bg/src/index.js'))) {
+    bad('packages/shapy-bg/src/index.js does not export SHAPY_ENGINE_VERSION = 1');
   }
-  if (!/SHAPY_ENGINE_VERSION/.test(read('packages/shapy/index.d.ts'))) {
-    bad('packages/shapy/index.d.ts does not declare SHAPY_ENGINE_VERSION');
+  if (!/SHAPY_ENGINE_VERSION/.test(read('packages/shapy-bg/index.d.ts'))) {
+    bad('packages/shapy-bg/index.d.ts does not declare SHAPY_ENGINE_VERSION');
   }
-  for (const doc of ['README.md', 'packages/shapy/README.md', 'docs/SEED_STABILITY.md']) {
+  for (const doc of ['README.md', 'packages/shapy-bg/README.md', 'docs/SEED_STABILITY.md']) {
     if (!/SHAPY_ENGINE_VERSION/.test(read(doc))) {
       bad(`${doc}: does not document SHAPY_ENGINE_VERSION`);
     }
   }
-  if (!/seek\s*\(/.test(read('packages/shapy/src/shapy-bg.js'))) {
-    bad('packages/shapy/src/shapy-bg.js does not expose seek()');
+  if (!/seek\s*\(/.test(read('packages/shapy-bg/src/shapy-bg.js'))) {
+    bad('packages/shapy-bg/src/shapy-bg.js does not expose seek()');
   }
 });
 

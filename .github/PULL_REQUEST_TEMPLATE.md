@@ -10,10 +10,10 @@
 
 - [ ] `npm run verify` passes.
 - [ ] `npm test` passes.
-- [ ] Documentation is updated: `README.md`, `packages/shapy/README.md`,
+- [ ] Documentation is updated: `README.md`, `packages/shapy-bg/README.md`,
       `CHANGELOG.md`, and the relevant files in `docs/`.
 - [ ] Generated files were rebuilt with `npm run build:template`; I did not edit
-      `packages/shapy/src/shapy-template.js` or `examples/standalone.html` by hand.
+      `packages/shapy-bg/src/shapy-template.js` or `examples/standalone.html` by hand.
 - [ ] Public API changes are backward-compatible, or the breaking change is
       explained above.
 - [ ] Browser checks were run at desktop (`1350x800`), mobile (`390x844`), and

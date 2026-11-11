@@ -8,7 +8,7 @@ body:
       value: |
         Thanks for taking the time to report a bug. Please include enough detail
         to reproduce it without guessing. Security issues must be reported
-        privately — see [SECURITY.md](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md).
+        privately — see [SECURITY.md](https://github.com/hemant-rao/shapy-bg/blob/main/SECURITY.md).
   - type: input
     id: version
     attributes:

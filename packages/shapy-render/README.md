@@ -1,6 +1,6 @@
 # shapy-render
 
-Export [Shapy](https://github.com/hemant-rao/Shapy) generative backgrounds to
+Export [Shapy](https://github.com/hemant-rao/shapy-bg) generative backgrounds to
 MP4, WebM, or a PNG sequence. Rendering is deterministic: Shapy captures each
 frame with `seek()` at a fixed timeline position, so the same seed and options
 produce the same clip.
@@ -13,7 +13,7 @@ produce the same clip.
 ## Install
 
 ```bash
-npm install shapy shapy-render
+npm install shapy-bg shapy-render
 npx playwright install chromium
 ```
 
@@ -184,19 +184,19 @@ The renderer:
 Use a fixed seed, viewport, DPR, and engine version for reproducible output.
 Rasterization, emoji artwork, and font availability can still differ between
 operating systems. See
-[Seed stability](https://github.com/hemant-rao/Shapy/blob/main/docs/SEED_STABILITY.md).
+[Seed stability](https://github.com/hemant-rao/shapy-bg/blob/main/docs/SEED_STABILITY.md).
 
 ## Requirements
 
 - Node.js 20.19 or newer
-- `shapy` 1.0 or newer
+- `shapy-bg` 1.0 or newer
 - Playwright Chromium
 - ffmpeg with `libx264` for MP4
 
 ## Security
 
 Report vulnerabilities privately through the
-[security policy](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md).
+[security policy](https://github.com/hemant-rao/shapy-bg/blob/main/SECURITY.md).
 Do not open a public issue for a security problem.
 
 ## License

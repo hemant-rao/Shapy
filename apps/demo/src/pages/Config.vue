@@ -246,9 +246,9 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue';
-import { createSeed } from 'shapy';
-import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy/catalog';
-import { STICKER_CATALOG, getRegistryData } from 'shapy/stickers';
+import { createSeed } from 'shapy-bg';
+import { SHAPE_GROUPS, EMOJI_GROUP } from 'shapy-bg/catalog';
+import { STICKER_CATALOG, getRegistryData } from 'shapy-bg/stickers';
 
 const STICKER_GROUP = {
   id: 'stickers',

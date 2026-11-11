@@ -1,4 +1,4 @@
-import type { ShapyOptions } from 'shapy';
+import type { ShapyOptions } from 'shapy-bg';
 
 export type ShapyRenderFormat = 'mp4' | 'webm' | 'png';
 

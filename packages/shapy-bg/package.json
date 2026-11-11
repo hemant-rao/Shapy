@@ -1,5 +1,5 @@
 {
-  "name": "shapy",
+  "name": "shapy-bg",
   "version": "1.0.0",
   "description": "Seedable generative shape backgrounds as a zero-dependency Web Component.",
   "author": {
@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hemant-rao/Shapy.git",
-    "directory": "packages/shapy"
+    "url": "git+https://github.com/hemant-rao/shapy-bg.git",
+    "directory": "packages/shapy-bg"
   },
-  "homepage": "https://github.com/hemant-rao/Shapy#readme",
+  "homepage": "https://github.com/hemant-rao/shapy-bg#readme",
   "bugs": {
-    "url": "https://github.com/hemant-rao/Shapy/issues"
+    "url": "https://github.com/hemant-rao/shapy-bg/issues"
   },
   "type": "module",
   "main": "./src/index.js",
@@ -67,7 +67,7 @@
     "prepack": "node scripts/build-template.mjs"
   },
   "keywords": [
-    "shapy",
+    "shapy-bg",
     "generative",
     "generative-art",
     "background",

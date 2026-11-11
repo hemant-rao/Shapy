@@ -1,9 +1,9 @@
 {
-  "name": "shapy-monorepo",
+  "name": "shapy-bg-monorepo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Monorepo for the shapy generative background Web Component.",
+  "description": "Monorepo for the shapy-bg generative background Web Component.",
   "author": {
     "name": "Hemant Rao",
     "url": "https://github.com/hemant-rao"
@@ -17,27 +17,27 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "npm --workspace @shapy/demo run dev",
+    "dev": "npm --workspace @shapy-bg/demo run dev",
     "dev:example": "vite . --open /examples/minimal.html",
-    "build": "npm --workspace @shapy/demo run build",
-    "build:template": "npm --workspace shapy run build:template && node scripts/sync-standalone.mjs",
+    "build": "npm --workspace @shapy-bg/demo run build",
+    "build:template": "npm --workspace shapy-bg run build:template && node scripts/sync-standalone.mjs",
     "check:repo": "node scripts/check-repo.mjs",
     "test": "node --test tests/package.test.mjs tests/render.test.mjs",
     "test:e2e": "node --test tests/render.e2e.test.mjs",
     "verify": "npm run build:template && npm run check:repo && npm test && npm run build && npm run pack:check",
-    "pack:shapy": "npm pack --workspace shapy",
+    "pack:shapy-bg": "npm pack --workspace shapy-bg",
     "pack:render": "npm pack --workspace shapy-render",
-    "pack:check": "npm run pack:shapy -- --dry-run && npm run pack:render -- --dry-run",
-    "publish:shapy": "npm publish --workspace shapy",
+    "pack:check": "npm run pack:shapy-bg -- --dry-run && npm run pack:render -- --dry-run",
+    "publish:shapy-bg": "npm publish --workspace shapy-bg",
     "publish:render": "npm publish --workspace shapy-render"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hemant-rao/Shapy.git"
+    "url": "git+https://github.com/hemant-rao/shapy-bg.git"
   },
-  "homepage": "https://github.com/hemant-rao/Shapy#readme",
+  "homepage": "https://github.com/hemant-rao/shapy-bg#readme",
   "bugs": {
-    "url": "https://github.com/hemant-rao/Shapy/issues"
+    "url": "https://github.com/hemant-rao/shapy-bg/issues"
   },
   "engines": {
     "node": ">=20.19"

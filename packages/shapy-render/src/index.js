@@ -27,11 +27,11 @@ const MIME = {
 
 function resolveShapyDir() {
   try {
-    return dirname(require.resolve('shapy/package.json'));
+    return dirname(require.resolve('shapy-bg/package.json'));
   } catch {
-    const fallback = fileURLToPath(new URL('../../shapy', import.meta.url));
+    const fallback = fileURLToPath(new URL('../../shapy-bg', import.meta.url));
     if (existsSync(join(fallback, 'package.json'))) return fallback;
-    throw new Error('shapy-render needs the shapy package installed in the same project.');
+    throw new Error('shapy-render needs the shapy-bg package installed in the same project.');
   }
 }
 
@@ -49,7 +49,7 @@ function pageHtml() {
 <body>
 <shapy-background aria-hidden="true"></shapy-background>
 <script type="module">
-  import { SHAPY_ENGINE_VERSION } from '/shapy/src/index.js';
+  import { SHAPY_ENGINE_VERSION } from '/shapy-bg/src/index.js';
   window.__SHAPY_ENGINE_VERSION__ = SHAPY_ENGINE_VERSION;
   window.__SHAPY_RENDER_READY__ = false;
   (async () => {
@@ -73,12 +73,12 @@ function createStaticServer(shapyDir, html) {
         response.end(html);
         return;
       }
-      if (!url.pathname.startsWith('/shapy/')) {
+      if (!url.pathname.startsWith('/shapy-bg/')) {
         response.writeHead(404);
         response.end('Not found');
         return;
       }
-      const relative = decodeURIComponent(url.pathname.slice('/shapy/'.length));
+      const relative = decodeURIComponent(url.pathname.slice('/shapy-bg/'.length));
       const target = resolve(shapyDir, relative);
       if (target !== shapyDir && !target.startsWith(`${shapyDir}${sep}`)) {
         response.writeHead(403);

@@ -4,29 +4,29 @@ import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { createSeed } from '../packages/shapy/src/seed.js';
-import { SHAPY_ENGINE_VERSION } from '../packages/shapy/src/index.js';
+import { createSeed } from '../packages/shapy-bg/src/seed.js';
+import { SHAPY_ENGINE_VERSION } from '../packages/shapy-bg/src/index.js';
 import {
   SAFE_ZONE_PRESETS,
   parseSafeZones
-} from '../packages/shapy/src/shapy-bg.js';
+} from '../packages/shapy-bg/src/shapy-bg.js';
 import {
   ALL_CORE_SHAPE_KEYS,
   CORE_SHAPE_KEYS,
   EMOJI_GROUP,
   SHAPE_GROUPS,
   getShapeLabel
-} from '../packages/shapy/src/catalog.js';
+} from '../packages/shapy-bg/src/catalog.js';
 import {
   STICKER_CATALOG,
   STICKER_REGISTRY,
   getRegistryData,
   registerStickers
-} from '../packages/shapy/src/stickers.js';
+} from '../packages/shapy-bg/src/stickers.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => readFileSync(join(root, rel), 'utf8');
-const packageJson = JSON.parse(read('packages/shapy/package.json'));
+const packageJson = JSON.parse(read('packages/shapy-bg/package.json'));
 
 test('createSeed returns unique 32-character hex seeds', () => {
   const seeds = new Set(Array.from({ length: 64 }, () => createSeed()));
@@ -102,15 +102,15 @@ test('sticker registry is serializable and per-instance', () => {
 });
 
 test('package metadata identifies the author, sponsor, and funding', () => {
-  assert.equal(packageJson.name, 'shapy');
+  assert.equal(packageJson.name, 'shapy-bg');
   assert.equal(packageJson.version, '1.0.0');
   assert.equal(packageJson.author.name, 'Hemant Rao');
   assert.equal(packageJson.author.url, 'https://github.com/hemant-rao');
   assert.equal(packageJson.funding.type, 'github');
   assert.equal(packageJson.funding.url, 'https://github.com/sponsors/hemant-rao');
   assert.equal(packageJson.license, 'MIT');
-  assert.equal(packageJson.repository.url, 'git+https://github.com/hemant-rao/Shapy.git');
-  assert.equal(packageJson.repository.directory, 'packages/shapy');
+  assert.equal(packageJson.repository.url, 'git+https://github.com/hemant-rao/shapy-bg.git');
+  assert.equal(packageJson.repository.directory, 'packages/shapy-bg');
   assert.equal(packageJson.publishConfig.access, 'public');
   assert.ok(packageJson.exports['./package.json']);
 });
@@ -126,26 +126,26 @@ test('package exports and files resolve inside the package', () => {
 
   for (const target of targets) {
     if (target.startsWith('./')) {
-      assert.ok(existsSync(join(root, 'packages/shapy', target)), target);
+      assert.ok(existsSync(join(root, 'packages/shapy-bg', target)), target);
     }
   }
 
   for (const file of packageJson.files) {
-    assert.ok(existsSync(join(root, 'packages/shapy', file)), file);
+    assert.ok(existsSync(join(root, 'packages/shapy-bg', file)), file);
   }
 });
 
 test('lockfile, changelog, and package version agree', () => {
   const lockfile = JSON.parse(read('package-lock.json'));
 
-  assert.equal(lockfile.packages['packages/shapy'].version, packageJson.version);
+  assert.equal(lockfile.packages['packages/shapy-bg'].version, packageJson.version);
   assert.match(read('CHANGELOG.md'), new RegExp(`## \\[${packageJson.version}\\]`));
 });
 
 test('documentation keeps one author and sponsor identity', () => {
   const docs = [
     'README.md',
-    'packages/shapy/README.md',
+    'packages/shapy-bg/README.md',
     'CONTRIBUTING.md',
     'SECURITY.md',
     'CODE_OF_CONDUCT.md',
@@ -165,7 +165,7 @@ test('documentation keeps one author and sponsor identity', () => {
     );
   }
 
-  for (const license of ['LICENSE', 'packages/shapy/LICENSE']) {
+  for (const license of ['LICENSE', 'packages/shapy-bg/LICENSE']) {
     assert.match(read(license), /Copyright \(c\) 2026 Hemant Rao/, license);
   }
 

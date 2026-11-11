@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hemant-rao/Shapy.git",
+    "url": "git+https://github.com/hemant-rao/shapy-bg.git",
     "directory": "packages/shapy-render"
   },
-  "homepage": "https://github.com/hemant-rao/Shapy/tree/main/packages/shapy-render#readme",
+  "homepage": "https://github.com/hemant-rao/shapy-bg/tree/main/packages/shapy-render#readme",
   "bugs": {
-    "url": "https://github.com/hemant-rao/Shapy/issues"
+    "url": "https://github.com/hemant-rao/shapy-bg/issues"
   },
   "type": "module",
   "main": "./src/index.js",
@@ -41,7 +41,7 @@
     "LICENSE"
   ],
   "keywords": [
-    "shapy",
+    "shapy-bg",
     "video",
     "export",
     "mp4",
@@ -58,7 +58,7 @@
     "playwright": "^1.65.0"
   },
   "peerDependencies": {
-    "shapy": ">=1.0.0"
+    "shapy-bg": ">=1.0.0"
   },
   "license": "MIT"
 }

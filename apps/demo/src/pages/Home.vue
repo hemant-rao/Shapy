@@ -45,7 +45,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { createSeed } from 'shapy';
+import { createSeed } from 'shapy-bg';
 
 const seed = ref('4D5E465BCA7F3A9C2E1B8D6A4F0C5E2D');
 const toast = ref('');

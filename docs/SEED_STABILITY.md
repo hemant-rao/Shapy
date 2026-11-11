@@ -19,7 +19,7 @@ composition:
 `SHAPY_ENGINE_VERSION` identifies the engine. It is exported from the package root:
 
 ```js
-import { SHAPY_ENGINE_VERSION } from 'shapy';
+import { SHAPY_ENGINE_VERSION } from 'shapy-bg';
 
 console.log(SHAPY_ENGINE_VERSION); // 1
 ```
@@ -94,7 +94,7 @@ For repeatable output:
 
 When a change alters generated output:
 
-1. Increment `SHAPY_ENGINE_VERSION` in `packages/shapy/src/index.js`.
+1. Increment `SHAPY_ENGINE_VERSION` in `packages/shapy-bg/src/index.js`.
 2. Update the public types and tests.
 3. Note the change in `CHANGELOG.md`.
 4. Update this page with the new contract window.

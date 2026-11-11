@@ -17,7 +17,7 @@ You add one HTML tag:
 and import the package once:
 
 ```js
-import 'shapy';
+import 'shapy-bg';
 ```
 
 That is the whole idea. Shapy fills the element with shapes, lines, emoji,
@@ -53,7 +53,7 @@ project.
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/hemant-rao/Shapy.git
+git clone https://github.com/hemant-rao/shapy-bg.git
 cd Shapy
 ```
 
@@ -78,7 +78,7 @@ What the example demonstrates:
 - `<shapy-background>` is the background.
 - CSS gives the element a size:
   `position: fixed; inset: 0; display: block;`
-- `import 'shapy'` registers the custom element.
+- `import 'shapy-bg'` registers the custom element.
 - `setAttribute('seed', ...)` updates the composition.
 
 Prefer the full demo? Run:
@@ -106,7 +106,7 @@ npm install
 ### Step 2: Install Shapy
 
 ```bash
-npm install shapy
+npm install shapy-bg
 ```
 
 Shapy is a browser-only Web Component. It needs Custom Elements and Shadow DOM,
@@ -117,7 +117,7 @@ which are available in current Chrome, Edge, Firefox, and Safari.
 Replace the contents of `src/main.js` with:
 
 ```js
-import 'shapy';
+import 'shapy-bg';
 import './style.css';
 ```
 
@@ -199,7 +199,7 @@ The full list is in the [attributes reference](../README.md#attributes).
 ### Create a new pattern button
 
 ```js
-import { createSeed } from 'shapy';
+import { createSeed } from 'shapy-bg';
 
 const background = document.querySelector('shapy-background');
 
@@ -441,7 +441,7 @@ The core package has no encoder and stays zero-dependency. Use the separate
 `shapy-render` package to capture frames with Playwright:
 
 ```bash
-npm install shapy shapy-render
+npm install shapy-bg shapy-render
 npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
 ```
 
@@ -460,8 +460,8 @@ CLI and library API.
 Stickers are optional and ship inside the same package.
 
 ```js
-import 'shapy';
-import { STICKER_REGISTRY } from 'shapy/stickers';
+import 'shapy-bg';
+import { STICKER_REGISTRY } from 'shapy-bg/stickers';
 
 const background = document.querySelector('shapy-background');
 background.setAttribute('registry-data', JSON.stringify(STICKER_REGISTRY));
@@ -574,7 +574,7 @@ Then use the element in a component:
 
 ```vue
 <script setup>
-import 'shapy';
+import 'shapy-bg';
 </script>
 
 <template>
@@ -599,7 +599,7 @@ ref if your JSX setup drops unknown attributes:
 
 ```jsx
 import { useEffect, useRef } from 'react';
-import 'shapy';
+import 'shapy-bg';
 
 export default function Background() {
   const ref = useRef(null);
@@ -625,7 +625,7 @@ In Svelte, use it directly:
 
 ```svelte
 <script>
-  import 'shapy';
+  import 'shapy-bg';
 </script>
 
 <shapy-background seed="4D5E465BCA" palette="midnight" />
@@ -695,7 +695,7 @@ background.addEventListener('shapy:change', (event) => {
 Type definitions ship with the package:
 
 ```ts
-import { createShapy, type ShapyOptions } from 'shapy';
+import { createShapy, type ShapyOptions } from 'shapy-bg';
 
 const options: ShapyOptions = {
   seed: '4D5E465BCA',
@@ -720,7 +720,7 @@ element.
 
 Check these in order:
 
-1. Did you import `shapy`?
+1. Did you import `shapy-bg`?
 2. Does `shapy-background` have a size? Try
    `shapy-background { position: fixed; inset: 0; display: block; }`.
 3. Is the element inside the `<body>`?
@@ -739,7 +739,7 @@ You did not pass a `seed`. Shapy generates a fresh seed for each element when
 
 Make sure you:
 
-1. Import from `shapy/stickers`.
+1. Import from `shapy-bg/stickers`.
 2. Set `registry-data` to `JSON.stringify(STICKER_REGISTRY)`.
 3. Set `shape-set="stickers"` or use `shape-set="custom"` with sticker keys.
 
@@ -756,7 +756,7 @@ only on the client (for example inside `useEffect` or `onMounted`).
 ### I only want the custom element, not the catalog helpers
 
 ```js
-import 'shapy/element';
+import 'shapy-bg/element';
 ```
 
 This registers `<shapy-background>` without importing the catalog exports.
@@ -864,7 +864,7 @@ background.setAttribute('shapes', 'safe-img,bad-img');
 Only `safe-img` will render; `bad-img` is dropped because its URL is unsafe.
 
 If something is unclear, open an issue:
-<https://github.com/hemant-rao/Shapy/issues>.
+<https://github.com/hemant-rao/shapy-bg/issues>.
 
 ## Support Shapy
 

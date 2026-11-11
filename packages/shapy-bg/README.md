@@ -1,4 +1,4 @@
-# shapy
+# shapy-bg
 
 Seedable generative shape backgrounds as a zero-dependency Web Component.
 
@@ -7,7 +7,7 @@ forms, emoji, images, or inline icons. It can also render an optional text
 overlay, so a single element can be a complete hero background.
 
 > **New to Shapy?** Read the
-> [step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md).
+> [step-by-step guide](https://github.com/hemant-rao/shapy-bg/blob/main/docs/GETTING_STARTED.md).
 > It covers installation, your first background, common recipes, and
 > troubleshooting.
 
@@ -35,7 +35,7 @@ overlay, so a single element can be a complete hero background.
 ## Install
 
 ```bash
-npm install shapy
+npm install shapy-bg
 ```
 
 Shapy is a browser-only Web Component. It needs Custom Elements and Shadow DOM,
@@ -46,7 +46,7 @@ which are available in current Chrome, Edge, Firefox, and Safari.
 ### 1. Import the package once
 
 ```js
-import 'shapy';
+import 'shapy-bg';
 ```
 
 ### 2. Add the element
@@ -211,7 +211,7 @@ composition and the same `seek()` frames. Package patches and minors keep the
 engine version; any change that alters generated output bumps the engine version
 and the package major version. Live mutations are intentionally non-deterministic
 and are outside this contract. See
-[Seed stability](https://github.com/hemant-rao/Shapy/blob/main/docs/SEED_STABILITY.md).
+[Seed stability](https://github.com/hemant-rao/shapy-bg/blob/main/docs/SEED_STABILITY.md).
 
 ## Video export
 
@@ -219,7 +219,7 @@ The core package has no encoder and stays zero-dependency. Use the separate
 `shapy-render` package for MP4, WebM, or PNG sequences:
 
 ```bash
-npm install shapy shapy-render
+npm install shapy-bg shapy-render
 npx playwright install chromium
 npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
 ```
@@ -231,7 +231,7 @@ npx shapy-render --seed reel-01 --duration 8 --output reel.mp4
 - Keep `--duration` a multiple of `--loop` for a clean repeat.
 - `shapy-render` captures with `live="off"` and `seek()` for deterministic frames.
 
-See the [shapy-render README](https://github.com/hemant-rao/Shapy/tree/main/packages/shapy-render#readme)
+See the [shapy-render README](https://github.com/hemant-rao/shapy-bg/tree/main/packages/shapy-render#readme)
 for the CLI and library API.
 
 ## Text overlay
@@ -453,15 +453,15 @@ Defaults:
 ## Optional stickers
 
 ```js
-import 'shapy';
-import { STICKER_REGISTRY } from 'shapy/stickers';
+import 'shapy-bg';
+import { STICKER_REGISTRY } from 'shapy-bg/stickers';
 
 const element = document.querySelector('shapy-background');
 element.setAttribute('registry-data', JSON.stringify(STICKER_REGISTRY));
 element.setAttribute('shape-set', 'stickers');
 ```
 
-`shapy/stickers` exports:
+`shapy-bg/stickers` exports:
 
 - `STICKER_CATALOG` — serializable sticker items.
 - `STICKER_REGISTRY` — a ready-to-serialize registry group.
@@ -470,20 +470,20 @@ element.setAttribute('shape-set', 'stickers');
   the registry. It never writes to `globalThis`.
 
 ```js
-import { registerStickers } from 'shapy/stickers';
+import { registerStickers } from 'shapy-bg/stickers';
 
 const element = document.querySelector('shapy-background');
 registerStickers(element);
 element.setAttribute('shape-set', 'stickers');
 ```
 
-Stickers are part of the `shapy` package and load only when you import the
-`shapy/stickers` subpath.
+Stickers are part of the `shapy-bg` package and load only when you import the
+`shapy-bg/stickers` subpath.
 
 ## JavaScript API
 
 ```js
-import { createShapy, createSeed } from 'shapy';
+import { createShapy, createSeed } from 'shapy-bg';
 
 const element = createShapy().mount(document.querySelector('#background'), {
   seed: '4D5E465BCA',
@@ -587,7 +587,7 @@ Type definitions ship with the package. The element, options, registry items,
 icons, events, and methods are all typed:
 
 ```ts
-import { createShapy, type ShapyOptions, type ShapyRegistry } from 'shapy';
+import { createShapy, type ShapyOptions, type ShapyRegistry } from 'shapy-bg';
 
 const registry: ShapyRegistry = {
   brand: {
@@ -612,7 +612,7 @@ if (container) createShapy().mount(container, options);
 
 ### Nothing appears
 
-1. Did you import `shapy`?
+1. Did you import `shapy-bg`?
 2. Does `shapy-background` have a size? Try
    `shapy-background { position: fixed; inset: 0; display: block; }`.
 3. Check the browser console for errors.
@@ -629,14 +629,14 @@ An item needs `emoji`, `image`, or `icon`. Check that the key is selected throug
 
 ### Stickers do not appear
 
-Import from `shapy/stickers`, set `registry-data` to
+Import from `shapy-bg/stickers`, set `registry-data` to
 `JSON.stringify(STICKER_REGISTRY)`, and set `shape-set="stickers"` or use
 `shape-set="custom"` with sticker keys.
 
 ### Vue says "Failed to resolve component: shapy-background"
 
 Add the `isCustomElement` option shown in the
-[step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md#use-with-vue-3).
+[step-by-step guide](https://github.com/hemant-rao/shapy-bg/blob/main/docs/GETTING_STARTED.md#use-with-vue-3).
 
 ### The pattern changes every time I reload
 
@@ -646,34 +646,34 @@ Pass a fixed `seed`; without one, each element gets a fresh 128-bit seed.
 
 | Import | What you get |
 | --- | --- |
-| `shapy` | Registers `<shapy-background>`, and exports `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and the catalog helpers. |
-| `shapy/element` | Registers `<shapy-background>` only. |
-| `shapy/catalog` | Shape and emoji catalog data without registering the element. |
-| `shapy/stickers` | Sticker catalog, serializable registry, and helpers. |
+| `shapy-bg` | Registers `<shapy-background>`, and exports `createShapy()`, `createSeed()`, `SHAPY_ENGINE_VERSION`, and the catalog helpers. |
+| `shapy-bg/element` | Registers `<shapy-background>` only. |
+| `shapy-bg/catalog` | Shape and emoji catalog data without registering the element. |
+| `shapy-bg/stickers` | Sticker catalog, serializable registry, and helpers. |
 
 ## Documentation
 
-- [Step-by-step guide](https://github.com/hemant-rao/Shapy/blob/main/docs/GETTING_STARTED.md)
+- [Step-by-step guide](https://github.com/hemant-rao/shapy-bg/blob/main/docs/GETTING_STARTED.md)
 - [Attributes](#attributes)
 - [Text overlay](#text-overlay)
 - [Theming](#theming)
 - [Custom shapes, images, and icons](#custom-shapes-images-and-icons)
 - [JavaScript API](#javascript-api)
-- [Full repository documentation](https://github.com/hemant-rao/Shapy#readme)
-- [Contributing](https://github.com/hemant-rao/Shapy/blob/main/CONTRIBUTING.md)
-- [Security policy](https://github.com/hemant-rao/Shapy/blob/main/SECURITY.md)
-- [Code of conduct](https://github.com/hemant-rao/Shapy/blob/main/CODE_OF_CONDUCT.md)
+- [Full repository documentation](https://github.com/hemant-rao/shapy-bg#readme)
+- [Contributing](https://github.com/hemant-rao/shapy-bg/blob/main/CONTRIBUTING.md)
+- [Security policy](https://github.com/hemant-rao/shapy-bg/blob/main/SECURITY.md)
+- [Code of conduct](https://github.com/hemant-rao/shapy-bg/blob/main/CODE_OF_CONDUCT.md)
 
 ## Support this project
 
-`shapy` is free and MIT-licensed, built and maintained by
+`shapy-bg` is free and MIT-licensed, built and maintained by
 [Hemant Rao](https://github.com/hemant-rao) in his own time. If it saved you a
 day of work — or your company ships it in production — you can back its
 maintenance:
 
 [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hemant-rao)
 &nbsp;
-[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/Shapy?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/Shapy)
+[![Star on GitHub](https://img.shields.io/github/stars/hemant-rao/shapy-bg?style=for-the-badge&logo=github&color=444)](https://github.com/hemant-rao/shapy-bg)
 
 **[Become a sponsor](https://github.com/sponsors/hemant-rao)** — one-time or
 monthly, any amount.

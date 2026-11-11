@@ -1,5 +1,5 @@
 {
-  "name": "@shapy/demo",
+  "name": "@shapy-bg/demo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "shapy": "*",
+    "shapy-bg": "*",
     "vue": "^3.4.0",
     "vue-router": "^4.6.4"
   },

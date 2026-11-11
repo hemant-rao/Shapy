@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
-import { SHAPY_ENGINE_VERSION } from '../packages/shapy/src/index.js';
+import { SHAPY_ENGINE_VERSION } from '../packages/shapy-bg/src/index.js';
 import { ffmpegSupportsDecoder, findFfmpeg } from '../packages/shapy-render/src/ffmpeg.js';
 import { render } from '../packages/shapy-render/src/index.js';
 
