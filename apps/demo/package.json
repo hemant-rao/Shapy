@@ -11,7 +11,7 @@
   "dependencies": {
     "shapy-bg": "*",
     "vue": "^3.4.0",
-    "vue-router": "^4.6.4"
+    "vue-router": "^5.4.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.10",
